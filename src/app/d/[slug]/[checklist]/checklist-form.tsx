@@ -287,7 +287,7 @@ export function ChecklistForm() {
           <span className="truncate">{data?.department.name_ar || data?.department.name_en || "القسم"}</span>
         </Link>
         <span className="flex-1" />
-        <LogoTile size={40} />
+        <LogoTile size={48} />
       </header>
 
       {/* Container identity */}

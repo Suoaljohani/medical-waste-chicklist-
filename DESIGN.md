@@ -14,8 +14,8 @@
 | `public/bg/waste-clinical-desktop.png` | 1672×941 | 2.87 MB | بديل لمتصفح لا يدعم WebP فقط (عبر `image-set`) |
 | `public/bg/waste-clinical-mobile.webp` | 941×1672 | 57 KB | خلفية الجوال (أقل من 768px) |
 | `public/bg/waste-clinical-mobile.png` | 941×1672 | 2.67 MB | بديل PNG للجوال |
-| `public/brand/logo.svg` | متجه | 59 KB | الشعار الرسمي على مربع أبيض، دون إعادة تلوين |
-| `public/brand/logo-white.svg` | متجه | 59 KB | نسخة بيضاء (غير مستخدمة في هذا التوجه) |
+| `public/brand/logo.svg` | متجه | 59 KB | الشعار الملوّن الرسمي — للطباعة فقط (ملصقات QR والنماذج الورقية) |
+| `public/brand/logo-white.svg` | متجه | 59 KB | الشعار الأبيض الرسمي بخلفية شفافة — على كل الشاشات، دون مربع ودون إعادة تلوين |
 | `src/fonts/JannaLT-*.ttf` | — | — | خط Janna LT (عادي وعريض) عبر `next/font/local` |
 
 - المصدر: الصورتان المرفقتان من المستخدم، حُوّلتا إلى WebP بجودة 88 دون قص.

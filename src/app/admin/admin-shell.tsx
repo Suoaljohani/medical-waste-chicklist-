@@ -232,7 +232,7 @@ function Login({ onDone }: { onDone: () => void }) {
     <main className="grid flex-1 place-items-center px-4 py-16">
       <form onSubmit={submit} className="glass-strong settle w-full max-w-sm p-7">
         <div className="flex justify-center">
-          <LogoTile size={76} />
+          <LogoTile size={96} />
         </div>
         <h1 className="mt-5 text-center text-[22px]">لوحة إدارة تشييك الحاويات</h1>
         <p className="mt-1 text-center text-[14px] text-ink-3">مستشفى الحديثة العام</p>

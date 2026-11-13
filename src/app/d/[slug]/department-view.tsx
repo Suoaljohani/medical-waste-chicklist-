@@ -153,7 +153,7 @@ export function DepartmentView() {
           <p className="text-[13px] text-ink-2">{z ? <>جولة {z.dayAr} <span className="code">{z.date}</span></> : "…"}</p>
         </div>
         <ScanButton className="btn btn-ghost btn-sm hidden shrink-0 sm:inline-flex">مسح رمز</ScanButton>
-        <LogoTile size={40} />
+        <LogoTile size={48} />
       </header>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
