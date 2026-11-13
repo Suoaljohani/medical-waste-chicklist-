@@ -573,7 +573,7 @@ function ItemRow({
   return (
     <fieldset id={id} tabIndex={-1} className={cx("p-4 outline-none sm:px-6", error && "bg-[rgb(54_31_38/55%)]")} aria-invalid={!!error || undefined} aria-describedby={error ? `${id}-e` : undefined}>
       <legend className="float-start mb-3 flex w-full gap-2.5 text-[18px] font-bold leading-[1.6]">
-        <span className="num mt-1 grid h-6 min-w-6 shrink-0 place-items-center rounded-full border border-[var(--divider)] px-1 text-[13px] text-ink-2" aria-hidden>
+        <span className="num mt-1 grid h-6 min-w-6 shrink-0 place-items-center rounded-full border border-[var(--divider)] px-1 text-[14px] font-bold text-ink" aria-hidden>
           {n}
         </span>
         <span>

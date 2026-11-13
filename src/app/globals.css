@@ -18,8 +18,8 @@
 
   /* Text */
   --text-primary: #e8f2ee;
-  --text-secondary: #b0c3c7;
-  --text-muted: #91a8ad;
+  --text-secondary: #cbdadc;
+  --text-muted: #a9bec2;
 
   /* Action */
   --action: #76dccd;
@@ -57,7 +57,7 @@
   --lift: 0 16px 40px rgb(0 0 0 / 16%);
   --card-blur: 28px;
   /* Recessed areas inside a glass card (summary strips, segmented controls, icon tiles). */
-  --glass-inset: rgb(6 27 36 / 38%);
+  --glass-inset: rgb(6 27 36 / 34%);
 
   /* Layout */
   --layout-max: 1360px;
@@ -229,11 +229,16 @@ body {
   .glass-strong,
   .surface {
     position: relative;
-    background: linear-gradient(160deg, rgb(28 64 74 / 52%) 0%, rgb(16 45 54 / 44%) 55%, rgb(11 35 45 / 50%) 100%);
+    /* Dark teal glass with a soft wash of the bins' yellow drifting in from the top corner. */
+    background:
+      radial-gradient(130% 100% at 100% 0%, rgb(236 196 72 / 24%) 0%, rgb(236 196 72 / 8%) 40%, transparent 72%),
+      radial-gradient(90% 80% at 0% 100%, rgb(236 196 72 / 11%) 0%, transparent 62%),
+      linear-gradient(160deg, rgb(28 64 74 / 44%) 0%, rgb(16 45 54 / 36%) 55%, rgb(11 35 45 / 42%) 100%);
     border: 1px solid rgb(232 242 238 / 15%);
+    border-top-color: rgb(241 214 120 / 34%);
     border-radius: var(--radius-panel);
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 12%),
+      inset 0 1px 0 rgb(255 236 170 / 14%),
       inset 0 0 0 1px rgb(255 255 255 / 2%),
       0 18px 44px rgb(0 0 0 / 26%);
     -webkit-backdrop-filter: blur(var(--card-blur)) saturate(150%);
@@ -713,7 +718,7 @@ body {
   @media (prefers-contrast: more) {
     :root {
       --divider: rgb(232 242 238 / 30%);
-      --text-muted: #b0c3c7;
+      --text-muted: #cbdadc;
       --control-border: #8fb0b3;
     }
   }
