@@ -227,7 +227,7 @@ export function QrDialog({
         setLink(url);
         setPng(p);
       }
-    })().catch(() => live && setErr("Could not make the QR code"));
+    })().catch(() => live && setErr("تعذّر إنشاء الباركود"));
     return () => {
       live = false;
     };
@@ -256,40 +256,29 @@ export function QrDialog({
     <Modal
       open={!!checklist}
       onClose={onClose}
-      title={kind === "report" ? "Report QR code" : "QR code"}
+      title={kind === "report" ? "باركود آخر تقرير" : "باركود فتح القائمة"}
       footer={
         <>
           <button className="btn btn-ghost mr-auto" onClick={copy} disabled={!link}>
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Copied" : "Copy link"}
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "نُسخ" : "نسخ الرابط"}
           </button>
           <button className="btn btn-ghost" onClick={() => checklist && png && printImage(png, checklist.title_en)} disabled={!png}>
-            <Printer className="h-4 w-4" /> Print
+            <Printer className="h-4 w-4" aria-hidden /> طباعة
           </button>
           <button className="btn btn-primary" onClick={download} disabled={!png}>
-            <Download className="h-4 w-4" /> Download
+            <Download className="h-4 w-4" aria-hidden /> تنزيل
           </button>
         </>
       }
     >
-      {kind === "report" ? (
-        <p className="mb-3 text-[13px] text-ink-3">
-          Scanning opens this checklist&apos;s report for the current month as a PDF, up to the moment of scanning. Anyone holding this code can view the
-          report, so give it only to supervisors.
-          <span className="mt-1 block" dir="rtl">
-            المسح يفتح تقرير هذا الشهر بصيغة PDF محدّثاً لحظة المسح. أي شخص معه هذا الرمز يقدر يشوف التقرير، فأعطه للمشرفين فقط.
-          </span>
-        </p>
-      ) : (
-        <p className="mb-3 text-[13px] text-ink-3">
-          Print it and put it where the check is done. Staff scan it with the phone camera and the checklist opens directly.
-          <span className="mt-1 block" dir="rtl">
-            اطبعه وضعه في مكان الفحص. يمسحه الموظف بكاميرا الجوال فتفتح القائمة مباشرة.
-          </span>
-        </p>
-      )}
+      <p className="mb-3 text-[14px] text-ink-2">
+        {kind === "report"
+          ? "المسح يفتح تقرير هذا الشهر بصيغة PDF محدّثًا لحظة المسح. أي شخص معه هذا الرمز يمكنه رؤية التقرير، فسلّمه للمشرفين فقط."
+          : "اطبعه وضعه في مكان الفحص. يمسحه الموظف بكاميرا الجوال فتفتح القائمة مباشرة."}
+      </p>
       <div className="grid place-items-center rounded-2xl bg-white/90 p-3">
         {png ? (
-          <img src={png} alt={`QR code for ${checklist?.title_en}`} className="h-auto max-h-[56vh] w-auto rounded-lg shadow-lg" />
+          <img src={png} alt={`باركود ${checklist?.title_ar || checklist?.title_en}`} className="h-auto max-h-[56vh] w-auto rounded-lg shadow-lg" />
         ) : err ? (
           <p className="p-10 text-[14px] text-danger">{err}</p>
         ) : (

@@ -2,17 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { House, LayoutDashboard, SquareCheckBig } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { House, ListChecks, ScanLine } from "lucide-react";
 import { cx } from "@/lib/utils";
+import { Scanner } from "./scanner";
 
 export const LAST_DEPT = "chk_last_dept";
 
-/** Phone tab bar for staff pages, modelled on the reference mock-up. */
+/**
+ * Floating dock for phones: home, scan, and the round in progress. Scan sits in the middle, largest,
+ * because it is how every round starts. Hidden from sm up, where the page header carries the same actions.
+ */
 export function StaffNav() {
   const path = usePathname();
-  const [dept, setDept] = useState("/");
+  const [dept, setDept] = useState<string | null>(null);
+  const [scan, setScan] = useState(false);
+  const close = useCallback(() => setScan(false), []);
   useEffect(() => {
     try {
       const d = localStorage.getItem(LAST_DEPT);
@@ -21,43 +26,51 @@ export function StaffNav() {
     } catch {}
   }, [path]);
 
-  const onLists = path.startsWith("/d/");
-  const items = [
-    { href: "/admin", label: "الإدارة", sub: "Admin", icon: LayoutDashboard, active: false },
-    { href: dept, label: "القوائم", sub: "Checklists", icon: SquareCheckBig, active: onLists, center: true },
-    { href: "/", label: "الرئيسية", sub: "Home", icon: House, active: path === "/" },
-  ];
-
+  const side = "flex min-h-12 min-w-[76px] flex-col items-center justify-center gap-0.5 rounded-2xl text-[12px] font-bold";
+  const onRound = path.startsWith("/d/");
   return (
-    <nav
-      className="glass-strong fixed inset-x-3 bottom-[max(10px,env(safe-area-inset-bottom))] z-40 flex items-end justify-around px-2 pb-2 pt-1.5 sm:hidden"
-      style={{ borderRadius: 26 }}
-      aria-label="Main"
-    >
-      {items.map((it) =>
-        it.center ? (
-          <Link key={it.label} href={it.href} className="-mt-7 flex flex-col items-center gap-1" aria-current={it.active ? "page" : undefined}>
-            <motion.span
-              whileTap={{ scale: 0.92 }}
-              className="glow grid h-14 w-14 place-items-center rounded-[18px] border text-sky"
-            >
-              <it.icon className="h-7 w-7 drop-shadow-[0_0_8px_rgba(47,211,224,.8)]" strokeWidth={2} />
-            </motion.span>
-            <span className={cx("text-[12px] font-semibold", it.active ? "text-sky" : "text-ink-2")}>{it.label}</span>
+    <>
+      <nav
+        className="glass-thin fixed inset-x-4 bottom-[max(12px,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center justify-between gap-2 p-2 sm:hidden"
+        style={{ borderRadius: 26 }}
+        aria-label="التنقل الرئيسي"
+      >
+        <Link href="/" className={cx(side, path === "/" ? "text-sky" : "text-ink-2")} aria-current={path === "/" ? "page" : undefined}>
+          <House className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden />
+          الرئيسية
+        </Link>
+        <button type="button" className="btn btn-primary h-[52px] flex-1 rounded-[18px] text-[15px]" onClick={() => setScan(true)}>
+          <ScanLine className="h-5 w-5" aria-hidden />
+          مسح باركود القسم
+        </button>
+        {dept ? (
+          <Link href={dept} className={cx(side, onRound ? "text-sky" : "text-ink-2")} aria-current={onRound ? "page" : undefined}>
+            <ListChecks className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden />
+            جولتي
           </Link>
         ) : (
-          <Link
-            key={it.label}
-            href={it.href}
-            className={cx("flex min-w-16 flex-col items-center gap-1 py-1.5 text-[12px] font-medium", it.active ? "text-sky" : "text-ink-3")}
-            aria-current={it.active ? "page" : undefined}
-          >
-            <it.icon className="h-6 w-6" strokeWidth={1.7} />
-            {it.label}
-          </Link>
-        ),
-      )}
-      <span className="pointer-events-none absolute bottom-1 left-1/2 h-1 w-20 -translate-x-1/2 rounded-full bg-sky/70 shadow-[0_0_12px_rgba(47,211,224,.9)]" aria-hidden />
-    </nav>
+          <span className={cx(side, "text-ink-3 opacity-60")} aria-disabled="true">
+            <ListChecks className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden />
+            جولتي
+          </span>
+        )}
+      </nav>
+      <Scanner open={scan} onClose={close} />
+    </>
+  );
+}
+
+/** Same action for wider screens and for the home page's main call to action. */
+export function ScanButton({ className, children }: { className?: string; children?: React.ReactNode }) {
+  const [scan, setScan] = useState(false);
+  const close = useCallback(() => setScan(false), []);
+  return (
+    <>
+      <button type="button" className={className ?? "btn btn-primary"} onClick={() => setScan(true)}>
+        <ScanLine className="h-5 w-5" aria-hidden />
+        {children ?? "مسح باركود القسم"}
+      </button>
+      <Scanner open={scan} onClose={close} />
+    </>
   );
 }

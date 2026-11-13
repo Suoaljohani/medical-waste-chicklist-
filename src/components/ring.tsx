@@ -13,56 +13,65 @@ export function Counter({ value, suffix = "" }: { value: number; suffix?: string
       mv.set(value);
       return;
     }
-    const c = animate(mv, value, { duration: 1.2, ease: EASE });
+    const c = animate(mv, value, { duration: 0.6, ease: EASE });
     return () => c.stop();
   }, [value, mv, reduce]);
-  return <motion.span>{text}</motion.span>;
+  return <motion.span className="num">{text}</motion.span>;
 }
 
-/** Glowing cyan progress ring (reference: "78%" compliance dial). */
-export function Ring({ pct, size = 112, stroke = 9, label }: { pct: number; size?: number; stroke?: number; label?: React.ReactNode }) {
-  const r = 50 - stroke / 2 - 2;
+/** Completion dial. `tone="ink"` is for use on the navy glass pane. */
+export function Ring({
+  pct,
+  size = 112,
+  stroke = 9,
+  label,
+  tone = "light",
+}: {
+  pct: number;
+  size?: number;
+  stroke?: number;
+  label?: React.ReactNode;
+  tone?: "light" | "ink";
+}) {
+  const r = 50 - stroke / 2 - 1;
   const C = 2 * Math.PI * r;
-  const id = `ring-${size}`;
+  const p = Math.min(1, Math.max(0, pct));
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90 overflow-visible">
-        <defs>
-          <linearGradient id={id} x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0" stopColor="#8af0f5" />
-            <stop offset="1" stopColor="#22b8c4" />
-          </linearGradient>
-          <filter id={`${id}-glow`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="2.4" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(160,236,245,.12)" strokeWidth={stroke} />
+    <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={`${Math.round(p * 100)}%`}>
+      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+        <circle cx="50" cy="50" r={r} fill="none" stroke={tone === "ink" ? "rgba(255,255,255,.22)" : "rgba(15,27,61,.1)"} strokeWidth={stroke} />
         <motion.circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke={`url(#${id})`}
+          stroke={tone === "ink" ? "#7fd4f7" : "var(--sky)"}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={C}
-          filter={`url(#${id}-glow)`}
           initial={{ strokeDashoffset: C }}
-          animate={{ strokeDashoffset: C * (1 - Math.min(1, Math.max(0, pct))) }}
-          transition={{ duration: 1.4, ease: EASE, delay: 0.25 }}
+          animate={{ strokeDashoffset: C * (1 - p) }}
+          transition={{ duration: 0.7, ease: EASE }}
         />
       </svg>
-      <div className="absolute inset-0 grid place-items-center">
+      <div className="absolute inset-0 grid place-items-center" aria-hidden>
         {label ?? (
-          <span className="num font-semibold" style={{ fontSize: size * 0.22 }}>
-            <Counter value={Math.round(pct * 100)} suffix="%" />
+          <span className="font-bold" style={{ fontSize: size * 0.24 }}>
+            <Counter value={Math.round(p * 100)} suffix="%" />
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Round progress as a row of marks, one per container: filled when inspected, amber when it has an open note. */
+export function Scale({ marks, label }: { marks: ("on" | "issue" | "off")[]; label: string }) {
+  return (
+    <div className="scale" role="img" aria-label={label}>
+      {marks.map((m, i) => (
+        <i key={i} className={m === "off" ? undefined : m} />
+      ))}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { hashPassword } from "./auth";
+import { CONTAINER_KEY, descriptor } from "./containers";
 import type { Checklist, Department, Employee, EntityName, Field, FieldValue, Submission } from "./types";
 import { slugify, uid } from "./utils";
 
@@ -13,12 +14,21 @@ const str = (v: unknown, max = 200) => (v === undefined || v === null ? "" : Str
 const num = (v: unknown) => (v === "" || v === null || v === undefined || Number.isNaN(Number(v)) ? null : Number(v));
 
 function fields(v: unknown): Field[] | string {
-  if (!Array.isArray(v) || !v.some((f) => (f as In)?.type !== "heading")) return "Add at least one field";
+  if (!Array.isArray(v) || !v.some((f) => (f as In)?.type !== "heading" && (f as In)?.type !== "container")) return "أضف بندًا واحدًا على الأقل";
   const seen = new Set<string>();
   const out: Field[] = [];
   for (const raw of v.slice(0, 120) as In[]) {
-    const label_en = str(raw.label_en, 100);
-    if (!label_en) return "Every field needs an English label";
+    if (raw.type === "container") {
+      // One descriptor per checklist, always first.
+      if (out.some((f) => f.type === "container")) continue;
+      const kind = raw.kind === "sharps" ? "sharps" : "floor";
+      out.unshift(descriptor({ kind, code: str(raw.code, 30), location: str(raw.location, 100) }));
+      seen.add(CONTAINER_KEY);
+      continue;
+    }
+    // Arabic is the working language; the English label is optional and falls back to the Arabic one.
+    const label_en = str(raw.label_en, 100) || str(raw.label_ar, 100);
+    if (!label_en) return "كل بند يحتاج إلى نص";
     let key = slugify(str(raw.key, 40) || label_en.slice(0, 40)).replace(/-/g, "_") || uid("f").slice(0, 8);
     while (seen.has(key)) key += "_2";
     seen.add(key);
@@ -49,10 +59,10 @@ export function sanitize(entity: EntityName, b: In, existing: Department | Check
   const now = new Date().toISOString();
   if (entity === "departments") {
     const e = existing as Department | null;
-    const name_en = str(b.name_en ?? e?.name_en, 80);
-    if (!name_en) return { error: "Department name is required" };
-    const slug = slugify(str(b.slug ?? e?.slug, 40) || name_en);
-    if (!slug) return { error: "Link name must use English letters or numbers" };
+    const name_en = str(b.name_en ?? e?.name_en, 80) || str(b.name_ar ?? e?.name_ar, 80);
+    if (!name_en) return { error: "اسم القسم مطلوب" };
+    // Arabic-only names have no Latin letters to build a link from, so fall back to a short generated one.
+    const slug = slugify(str(b.slug ?? e?.slug, 40) || name_en) || `d-${uid().slice(0, 6)}`;
     return {
       row: {
         id: e?.id ?? uid("dep"),
@@ -68,10 +78,10 @@ export function sanitize(entity: EntityName, b: In, existing: Department | Check
   }
   if (entity === "checklists") {
     const e = existing as Checklist | null;
-    const title_en = str(b.title_en ?? e?.title_en, 140);
-    if (!title_en) return { error: "Checklist title is required" };
+    const title_en = str(b.title_en ?? e?.title_en, 140) || str(b.title_ar ?? e?.title_ar, 140);
+    if (!title_en) return { error: "عنوان القائمة مطلوب" };
     const department_id = str(b.department_id ?? e?.department_id, 80);
-    if (!department_id) return { error: "Choose a department" };
+    if (!department_id) return { error: "اختر القسم" };
     const f = fields(b.fields ?? e?.fields);
     if (typeof f === "string") return { error: f };
     // Locked = staff must enter their own account password each time they open it.
@@ -100,12 +110,12 @@ export function sanitize(entity: EntityName, b: In, existing: Department | Check
   if (entity === "employees") {
     const e = existing as Employee | null;
     const name = str(b.name ?? e?.name, 80);
-    if (!name) return { error: "Name is required" };
+    if (!name) return { error: "الاسم مطلوب" };
     const employee_no = str(b.employee_no ?? e?.employee_no, 30).replace(/\s+/g, "");
-    if (!employee_no) return { error: "Employee number is required" };
+    if (!employee_no) return { error: "الرقم الوظيفي مطلوب" };
     const pw = b.password === undefined || b.password === null ? "" : String(b.password);
-    if (!e && pw.length < 4) return { error: "Password needs at least 4 characters" };
-    if (pw && pw.length < 4) return { error: "Password needs at least 4 characters" };
+    if (!e && pw.length < 4) return { error: "كلمة المرور 4 أحرف على الأقل" };
+    if (pw && pw.length < 4) return { error: "كلمة المرور 4 أحرف على الأقل" };
     return {
       row: {
         id: e?.id ?? uid("emp"),
@@ -123,7 +133,7 @@ export function sanitize(entity: EntityName, b: In, existing: Department | Check
 
   // submissions: admin may correct values / name / note only
   const e = existing as Submission | null;
-  if (!e) return { error: "Records are created by staff from the checklist page" };
+  if (!e) return { error: "السجلات يُنشئها الموظفون من صفحة التشييك" };
   const values = { ...e.values };
   if (b.values && typeof b.values === "object") {
     for (const [k, v] of Object.entries(b.values as Record<string, FieldValue>)) {

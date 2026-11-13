@@ -31,12 +31,12 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/admin/[enti
   if ("error" in result) return Response.json(result, { status: 400 });
   if (entity === "departments") {
     const clash = (await store().list("departments")).some((d) => d.slug === (result.row as { slug: string }).slug);
-    if (clash) return Response.json({ error: "That link name is already used by another department" }, { status: 400 });
+    if (clash) return Response.json({ error: "رمز الرابط مستخدم لقسم آخر" }, { status: 400 });
   }
   if (entity === "employees") {
     const no = (result.row as { employee_no: string }).employee_no;
     if ((await store().list("employees")).some((e) => e.employee_no === no))
-      return Response.json({ error: "Another employee already has that number" }, { status: 400 });
+      return Response.json({ error: "الرقم الوظيفي مستخدم لموظف آخر" }, { status: 400 });
   }
   return Response.json(toClient(await store().insert(entity, result.row as never)));
 }

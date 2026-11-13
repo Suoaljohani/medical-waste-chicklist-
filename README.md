@@ -20,26 +20,45 @@ finger and submit. Admins get a live dashboard, can manage everything, and expor
 Admins can edit these, add more from the built-in templates (ward segregation audit, trolley
 cleaning log, autoclave cycle log, …) or create new ones from scratch.
 
+## How a round works
+
+1. Each department has a QR code at its entrance (admin → الحاويات والباركود → باركود القسم).
+2. The employee scans it with the phone camera or the in-app scanner. The round opens with the department confirmed.
+3. The round lists the department's floor containers and wall-mounted sharps containers, remaining ones first.
+4. For each container: answer every item مطابق / غير مطابق. A non-compliant item needs a short note; the on-the-spot action and a photo are optional.
+5. Sign and save. Unsaved answers stay on the phone as a draft until the server accepts them.
+6. Admins follow up non-compliant items under الملاحظات (open → in progress → closed). Completing an inspection does not close its notes.
+
 ## Pages
 
 | Path | Who | What |
 | --- | --- | --- |
-| `/` | Staff | Choose a department |
-| `/d/waste` | Staff | Enter name once, pick a checklist |
-| `/d/waste/<checklist>` | Staff | Fill in → sign → “Successfully checked” |
-| `/c/<checklist-id>` | Staff | QR code shortcut straight to a checklist |
-| `/admin` | Admin | Live dashboard (updates every 5 s) |
-| `/admin/records` | Admin | View, correct or delete submissions |
-| `/admin/reports` | Admin | Preview and export PDF / Excel / Word |
-| `/admin/checklists` | Admin | Add, edit, reorder, hide, delete checklists, fields, lock codes and QR codes |
-| `/admin/departments` | Admin | Add, edit, hide, delete departments |
-| `/admin/staff` | Admin | Staff accounts (optional sign-in with employee number) |
-| `/admin/settings` | Admin | Report header lines, copyright name, admin password |
+| `/` | Staff | Scan a department or pick it from the list |
+| `/d/<dept>` | Staff | The round: containers of the department and today's progress |
+| `/d/<dept>/<container>` | Staff | Inspect one container → sign → saved |
+| `/c/<container>` | Staff | Printed container label: confirms the department, then opens the container |
+| `/admin` | Admin | Today's rounds by department, open notes, 14-day trend, latest inspections |
+| `/admin/observations` | Admin | Follow up non-compliant items |
+| `/admin/records` | Admin | Every inspection, with correction and delete |
+| `/admin/reports` | Admin | Month report per container as PDF / Excel / Word |
+| `/admin/containers` | Admin | Containers per department, inspection items per kind, QR codes and printable labels |
+| `/admin/departments` | Admin | Departments |
+| `/admin/checklists` | Admin | Other checklists not tied to a container |
+| `/admin/staff` | Admin | Staff accounts |
+| `/admin/settings` | Admin | Report header, copyright owner, admin password |
+
+Design decisions are documented in `DESIGN.md`.
+
+## Preview data
+
+`DEMO_DATA=1` (local file store only) loads a clearly labelled preview data set: five made-up departments,
+38 containers and two weeks of inspections. Every screen shows «بيانات توضيحية للمعاينة» while it is on. It is never
+written to Supabase.
 
 ## Stack
 
 Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · Motion · Supabase (Postgres) ·
-signature_pad · exceljs · docx · jsPDF + html-to-image.
+signature_pad · jsQR · qrcode · exceljs · docx · jsPDF + html-to-image. Font: Janna LT (bundled).
 
 ## Environment variables
 

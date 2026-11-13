@@ -2,8 +2,10 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { demoDb } from "./demo";
 import { defaultSettings, seedChecklists, seedDepartments } from "./seed";
 import type { Checklist, Department, Employee, EntityName, Settings, Submission } from "./types";
+import { zoned } from "./utils";
 
 type Row = Department | Checklist | Submission | Employee;
 type EntityMap = { departments: Department; checklists: Checklist; submissions: Submission; employees: Employee };
@@ -93,7 +95,7 @@ class SupabaseStore implements Store {
 
 /* ---------------- JSON file (local / demo) ---------------- */
 
-type FileDb = {
+export type FileDb = {
   departments: Department[];
   checklists: Checklist[];
   submissions: Submission[];
@@ -102,7 +104,9 @@ type FileDb = {
 };
 
 class FileStore implements Store {
-  private file = path.join(process.env.VERCEL ? "/tmp" : path.join(process.cwd(), ".data"), "db.json");
+  // DEMO_DATA=1 switches the local file store to a separate, clearly labelled preview data set.
+  private demo = process.env.DEMO_DATA === "1";
+  private file = path.join(process.env.VERCEL ? "/tmp" : path.join(process.cwd(), ".data"), this.demo ? "demo.json" : "db.json");
   private cache: FileDb | null = null;
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -111,7 +115,14 @@ class FileStore implements Store {
     try {
       this.cache = JSON.parse(await fs.readFile(this.file, "utf8")) as FileDb;
       this.cache.employees ??= [];
+      // Preview data is dated relative to "today", so rebuild it when the day changes.
+      if (this.demo && this.cache.settings.demo_day !== zoned(new Date()).dayKey) throw new Error("stale demo");
     } catch {
+      if (this.demo) {
+        this.cache = demoDb();
+        await this.flush();
+        return this.cache;
+      }
       this.cache = {
         departments: seedDepartments,
         checklists: seedChecklists,

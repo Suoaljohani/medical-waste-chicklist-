@@ -37,7 +37,7 @@ export async function api<T = unknown>(url: string, method: string, body?: unkno
     body: body ? JSON.stringify(body) : undefined,
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || "Something went wrong");
+  if (!r.ok) throw new Error(j.error || "حدث خطأ، حاول مرة أخرى");
   return j as T;
 }
 
@@ -45,8 +45,8 @@ export function PageTitle({ title, sub, children }: { title: string; sub?: strin
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-[28px] font-semibold tracking-[-0.025em] sm:text-[32px]">{title}</h1>
-        {sub && <p className="mt-0.5 text-[14px] text-ink-3">{sub}</p>}
+        <h1 className="text-[26px] sm:text-[30px]">{title}</h1>
+        {sub && <p className="mt-0.5 text-[14.5px] text-ink-2">{sub}</p>}
       </div>
       {children && <div className="flex flex-wrap gap-2">{children}</div>}
     </div>

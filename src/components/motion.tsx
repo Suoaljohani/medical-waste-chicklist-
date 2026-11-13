@@ -2,17 +2,24 @@
 
 import { motion, useReducedMotion, type HTMLMotionProps } from "motion/react";
 
-export const EASE = [0.16, 1, 0.3, 1] as const;
+/** Strong ease-out used for everything that enters or responds. */
+export const EASE = [0.23, 1, 0.32, 1] as const;
+/** iOS-like curve for sheets. */
+export const EASE_SHEET = [0.32, 0.72, 0, 1] as const;
 
-/** Fade + rise, staggered by index. Only opacity/transform so it stays on the GPU. */
+/**
+ * Content settling into place when a screen opens. One short pass per screen; rows inside lists do not
+ * animate individually, so a long round stays fast to scan.
+ */
 export function Rise({ i = 0, children, className, ...rest }: HTMLMotionProps<"div"> & { i?: number }) {
   const reduce = useReducedMotion();
   return (
     <motion.div
       className={className}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
-      animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: EASE, delay: 0.03 + i * 0.04 }}
+      // Same starting state on server and client (avoids a hydration mismatch); reduced motion just skips the movement.
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduce ? { duration: 0 } : { duration: 0.3, ease: EASE, delay: Math.min(i, 5) * 0.04 }}
       {...rest}
     >
       {children}

@@ -22,7 +22,7 @@ export async function PUT(req: Request) {
     copyright_owner: body.copyright_owner ? String(body.copyright_owner).slice(0, 60) : cur.copyright_owner,
   };
   if (body.new_password) {
-    if (body.new_password.length < 6) return Response.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+    if (body.new_password.length < 6) return Response.json({ error: "كلمة المرور 6 أحرف على الأقل" }, { status: 400 });
     next.admin_password_hash = hashPassword(body.new_password);
   }
   await store().putSettings(next);

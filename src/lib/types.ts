@@ -1,5 +1,11 @@
-/** check = item present ✓ / missing ✗; heading = section title only (no value). */
-export type FieldType = "number" | "text" | "select" | "yesno" | "check" | "heading";
+/**
+ * check = item compliant ✓ / not compliant ✗; heading = section title only (no value);
+ * container = descriptor of a waste container (kind, code, location). Holds no value and is never shown as an input.
+ */
+export type FieldType = "number" | "text" | "select" | "yesno" | "check" | "heading" | "container";
+
+/** floor = floor-standing waste container; sharps = wall-mounted sharps container. */
+export type ContainerKind = "floor" | "sharps";
 
 export type Field = {
   key: string;
@@ -15,6 +21,10 @@ export type Field = {
   qty?: string;
   /** check / yesno: open the camera when ticked and attach the photo. */
   photo?: boolean;
+  /** type "container" only. */
+  kind?: ContainerKind;
+  code?: string;
+  location?: string;
 };
 
 export type Department = {
@@ -73,6 +83,36 @@ export type Settings = {
   copyright_owner: string;
   timezone: string;
   admin_password_hash?: string;
+  /** Inspection items applied to every container of a kind. */
+  container_items?: Record<ContainerKind, Field[]>;
+  /** True only for the local preview data set. Never set in production. */
+  demo?: boolean;
+  demo_day?: string;
+};
+
+/** Follow-up state of a non-compliant item. Separate from whether the inspection itself is complete. */
+export type ObservationStatus = "open" | "progress" | "closed";
+
+export type Observation = {
+  /** `${submission_id}:${key}` */
+  id: string;
+  submission_id: string;
+  key: string;
+  label_ar: string;
+  label_en: string;
+  note: string;
+  action: string;
+  status: ObservationStatus;
+  followup: string;
+  updated_at: string | null;
+  has_photo: boolean;
+  checklist_id: string;
+  checklist_title: string;
+  container: { kind: ContainerKind; code: string; location: string } | null;
+  department_id: string;
+  department: string;
+  employee_name: string;
+  submitted_at: string;
 };
 
 export type Employee = {

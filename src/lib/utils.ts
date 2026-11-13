@@ -33,6 +33,8 @@ export function zoned(iso: string | Date, tz = TZ) {
     dayShort: get({ weekday: "short" }),
     dayAr: new Intl.DateTimeFormat("ar-SA", { timeZone: tz, weekday: "long" }).format(d),
     time: new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true }).format(d),
+    timeAr: new Intl.DateTimeFormat("ar-SA-u-nu-latn-ca-gregory", { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true }).format(d),
+    monthAr: new Intl.DateTimeFormat("ar-SA-u-nu-latn-ca-gregory", { timeZone: tz, month: "long", year: "numeric" }).format(d),
     monthLabel: get({ month: "long", year: "numeric" }),
     monthShort: get({ month: "2-digit", year: "numeric" }),
   };
@@ -80,9 +82,22 @@ export function rangeLabel(f: Field) {
   return "";
 }
 
-/** Fields that hold a value (everything except section headings). */
+/** Fields that hold a value (everything except section headings and the container descriptor). */
 export function valueFields(c: Checklist) {
-  return c.fields.filter((f) => f.type !== "heading");
+  return c.fields.filter((f) => f.type !== "heading" && f.type !== "container");
+}
+
+/** Shift name in Arabic for a shift letter. */
+export const SHIFT_AR: Record<string, string> = { M: "الصباحية", A: "المسائية", N: "الليلية" };
+
+/** "منذ 5 د" style relative time. */
+export function agoAr(iso: string, now = Date.now()) {
+  const m = Math.max(0, Math.round((now - new Date(iso).getTime()) / 60000));
+  if (m < 1) return "الآن";
+  if (m < 60) return `منذ ${m} د`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `منذ ${h} س`;
+  return `منذ ${Math.round(h / 24)} يوم`;
 }
 
 /** Paper-style grid report: items down the side, entries across. */

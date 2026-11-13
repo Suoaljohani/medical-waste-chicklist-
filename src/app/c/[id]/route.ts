@@ -11,6 +11,12 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/c/[id]">) {
   const s = store();
   const checklist = await s.get("checklists", id);
   const department = checklist ? await s.get("departments", checklist.department_id) : null;
-  const to = checklist?.active && department?.active ? `/d/${department.slug}/${checklist.id}` : department?.active ? `/d/${department.slug}` : "/";
+  // Scanning a printed code is proof of being in the department, so it lands on the round with qr=1.
+  const to =
+    checklist?.active && department?.active
+      ? `/d/${department.slug}?qr=1&next=${encodeURIComponent(checklist.id)}`
+      : department?.active
+        ? `/d/${department.slug}?qr=1`
+        : "/";
   return Response.redirect(new URL(to, req.url), 307);
 }

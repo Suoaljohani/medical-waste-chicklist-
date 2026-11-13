@@ -1,357 +1,318 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useInView } from "motion/react";
-import { Activity, CalendarRange, CircleAlert, ClipboardCheck, Sigma, Trophy } from "lucide-react";
-import { useNow } from "@/components/clock";
+import Link from "next/link";
+import { useState } from "react";
+import { ArrowLeft, CalendarDays, ChevronDown, ChevronLeft, Clock, RefreshCw, ScanLine, TriangleAlert } from "lucide-react";
+import { CodeBadge, DemoBadge, KindTile } from "@/components/container-bits";
 import { Icon } from "@/components/icon";
-import { Counter, Ring } from "@/components/ring";
-import { EASE, Rise } from "@/components/motion";
-import type { Stats } from "@/lib/types";
-import { cx, zoned } from "@/lib/utils";
+import { Rise } from "@/components/motion";
+import { Counter, Scale } from "@/components/ring";
+import { OBS_STATUS } from "@/lib/observations";
+import { agoAr, cx, zoned } from "@/lib/utils";
+import type { Overview } from "../api/admin/overview/route";
 import { PageTitle, useData } from "./use-data";
 
 export function Dashboard() {
-  const { data, error } = useData<Stats>("/api/admin/stats", 5000);
+  const [date, setDate] = useState("");
+  const { data, error, reload } = useData<Overview>(`/api/admin/overview${date ? `?date=${date}` : ""}`, 20_000);
+  const [open, setOpen] = useState<string | null>(null);
+
+  if (error && !data)
+    return (
+      <div className="glass p-8 text-center">
+        <p className="font-bold">تعذّر تحميل لوحة المتابعة</p>
+        <button className="btn btn-primary mt-4" onClick={reload}>
+          <RefreshCw className="h-4 w-4" aria-hidden /> إعادة المحاولة
+        </button>
+      </div>
+    );
+
+  const t = data?.totals;
+  const z = data ? zoned(new Date(`${data.date}T12:00:00Z`)) : null;
+  const pct = t && t.containers ? t.inspected / t.containers : 0;
+  const maxTrend = Math.max(1, ...(data?.trend.map((d) => d.inspected) ?? [1]));
 
   return (
     <div>
-      <PageTitle title="Dashboard" sub="Live overview of medical waste checklist activity">
-        <span className="glass flex items-center gap-2 rounded-full px-3.5 py-2 text-[12px] font-semibold tracking-wide text-ink-2" style={{ borderRadius: 999 }}>
-          <span className={cx("pulse-dot", error && "!bg-danger")} />
-          {error ? "RECONNECTING" : "LIVE"}
-          <span className="num font-normal text-ink-3">{data ? <Since at={data.generated_at} /> : "…"}</span>
-        </span>
+      <PageTitle title="لوحة المتابعة" sub={z ? `${data!.is_today ? "اليوم" : "يوم"} ${z.dayAr} ${z.date}` : "…"}>
+        {data?.demo && <DemoBadge />}
+        <label className="relative">
+          <span className="sr-only">اختر اليوم</span>
+          <CalendarDays className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" aria-hidden />
+          <input
+            type="date"
+            className="field sm ps-9 num"
+            dir="ltr"
+            max={data?.is_today ? data.date : undefined}
+            value={date || data?.date || ""}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </label>
+        {date && (
+          <button className="btn btn-ghost btn-sm" onClick={() => setDate("")}>
+            اليوم
+          </button>
+        )}
       </PageTitle>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Kpi i={0} icon={<ClipboardCheck />} label="Checks today" value={data?.totals.today} tint="#2FD3E0" />
-        <Kpi i={1} icon={<CalendarRange />} label="Last 7 days" value={data?.totals.week} tint="#3AC0C3" />
-        <Kpi i={2} icon={<Sigma />} label="This month" value={data?.totals.month} tint="#7CE9F0" sub={data ? `${data.totals.all} all-time` : ""} />
-        <Kpi
-          i={3}
-          icon={<CircleAlert />}
-          label="Out of range (month)"
-          value={data?.totals.flagged_month}
-          tint={data?.totals.flagged_month ? "#E0475B" : "#04A67A"}
-        />
-      </div>
-
-      <div className="mt-4 grid gap-4 xl:grid-cols-[1.6fr_1fr]">
-        <Rise i={4} className="glass p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="eyebrow">Activity</p>
-              <p className="mt-1 text-[17px] font-semibold">Submissions · last 14 days</p>
-            </div>
-            <div className="flex gap-3 text-[12px] text-ink-3">
-              <span className="flex items-center gap-1.5">
-                <i className="h-2 w-2 rounded-full bg-blue" /> Checks
-              </span>
-              <span className="flex items-center gap-1.5">
-                <i className="h-2 w-2 rounded-full bg-danger" /> Flagged
-              </span>
-            </div>
-          </div>
-          <TrendChart data={data?.trend} />
-        </Rise>
-
-        <Rise i={5} className="glass flex flex-col items-center justify-center p-5 text-center">
-          <p className="eyebrow self-start">Today’s compliance</p>
-          <div className="my-4"><Ring pct={data?.compliance_today.expected ? data.compliance_today.done / data.compliance_today.expected : 0} size={160} stroke={8} /></div>
-          <p className="text-[14px] text-ink-2">
-            <span className="num font-semibold text-ink">
-              {data?.compliance_today.done ?? 0}/{data?.compliance_today.expected ?? 0}
-            </span>{" "}
-            checklists completed today
+      {/* The one dark pane: how far today's rounds have got. */}
+      <Rise className="glass-ink grid gap-5 p-5 sm:grid-cols-3 sm:p-6 xl:grid-cols-[1.4fr_1fr_1fr_1fr] xl:items-end">
+        <div className="sm:col-span-3 xl:col-span-1">
+          <p className="muted text-[14px]">الحاويات المفحوصة</p>
+          <p className="mt-1 text-[40px] font-bold leading-none">
+            {t ? <Counter value={t.inspected} /> : "–"} <span className="text-[20px] font-normal text-white/75">من {t ? <span className="num">{t.containers}</span> : "–"}</span>
           </p>
-        </Rise>
-      </div>
-
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {data?.per_checklist.map((c, i) => (
-          <Rise key={c.id} i={6 + i} className="glass p-5">
-            <div className="flex items-start gap-3">
-              <span
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] text-white"
-                style={{ background: `linear-gradient(145deg, ${c.color}, color-mix(in oklab, ${c.color} 55%, #283a83))` }}
-              >
-                <Icon name={c.icon} className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-[14px] font-semibold leading-snug">{c.title_en}</p>
-                <p className="mt-0.5 text-[12px] text-ink-3">
-                  {c.department} · {c.month_count} this month
-                </p>
-              </div>
-              <span
-                className={cx(
-                  "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                  c.done_today ? "bg-green/12 text-green" : "bg-warn/15 text-warn",
-                )}
-              >
-                {c.done_today ? "Done today" : "Pending"}
-              </span>
+          <div className="mt-4">
+            <div className="h-3 overflow-hidden rounded-full bg-white/20" role="img" aria-label={`${Math.round(pct * 100)}% من الحاويات فُحصت`}>
+              <div className="h-full rounded-full bg-[#7fd4f7] transition-transform duration-500 ease-out" style={{ width: "100%", transform: `scaleX(${pct})`, transformOrigin: "right" }} />
             </div>
-            <Sparkline c={c} />
-            <p className="num mt-1 text-[12px] text-ink-3">
-              {c.last_at ? `Last: ${zoned(c.last_at).date} · ${zoned(c.last_at).time}` : "No checks yet"}
+            <p className="muted mt-2 text-[13px]">
+              <span className="num">{Math.round(pct * 100)}%</span> — متبقٍ <span className="num">{t ? t.containers - t.inspected : "–"}</span> حاوية
             </p>
-          </Rise>
-        ))}
-      </div>
-
-      <div className="mt-4 grid gap-4 xl:grid-cols-[1.6fr_1fr]">
-        <Rise i={9} className="glass p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <Activity className="h-4 w-4 text-ink-3" />
-            <p className="text-[17px] font-semibold">Recent activity</p>
           </div>
-          <ul className="flex flex-col">
-            <AnimatePresence initial={false}>
-              {data?.recent.map((r) => (
-                <motion.li
-                  key={r.id}
-                  layout
-                  initial={{ opacity: 0, y: -12, backgroundColor: "rgba(43,170,226,0.18)" }}
-                  animate={{ opacity: 1, y: 0, backgroundColor: "rgba(43,170,226,0)" }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.6, ease: EASE, backgroundColor: { duration: 2.4 } }}
-                  className="flex items-center gap-3 rounded-xl border-b border-ink/5 px-2 py-3 last:border-0"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ background: r.color }}>
-                    <Icon name={r.icon} className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium">
-                      {r.employee_name} <span className="font-normal text-ink-3">checked</span> {r.checklist}
-                    </p>
-                    <p className="num truncate text-[12px] text-ink-3">{r.summary}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    {r.flagged && <span className="mb-0.5 block text-[11px] font-semibold text-danger">Out of range</span>}
-                    <span className="num text-[12px] text-ink-3">{ago(r.submitted_at)}</span>
-                  </div>
-                </motion.li>
+        </div>
+        <Stat label="أقسام اكتملت جولتها" value={t ? `${t.departments_done} من ${t.departments}` : "–"} />
+        <Stat label="حاويات بها عدم مطابقة" value={t ? String(t.non_compliant) : "–"} hint="في فحوص هذا اليوم" />
+        <Stat label="ملاحظات تنتظر المعالجة" value={t ? String(t.obs_open + t.obs_progress) : "–"} hint={t ? `${t.obs_open} مفتوحة · ${t.obs_progress} قيد المعالجة` : ""} />
+      </Rise>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_380px]">
+        <Rise i={1} className="glass-strong overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-4">
+            <h2 className="text-[18px]">الجولات حسب القسم</h2>
+            <p className="text-[13px] text-ink-3">اضغط القسم لعرض حاوياته</p>
+          </div>
+          {!data && (
+            <div className="grid gap-2 p-5">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="skeleton h-14" />
               ))}
-            </AnimatePresence>
-            {data && data.recent.length === 0 && <li className="py-8 text-center text-[14px] text-ink-3">No submissions yet. They’ll appear here live.</li>}
-          </ul>
-        </Rise>
-
-        <Rise i={10} className="glass p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-ink-3" />
-            <p className="text-[17px] font-semibold">Most active this month</p>
-          </div>
-          <ul className="flex flex-col gap-3">
-            {data?.top_staff.map((s, i) => {
-              const max = data.top_staff[0].count || 1;
-              return (
-                <li key={s.name}>
-                  <div className="flex justify-between text-[14px]">
-                    <span className="truncate font-medium">{s.name}</span>
-                    <span className="num text-ink-3">{s.count}</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink/5">
-                    <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-sky to-navy"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(s.count / max) * 100}%` }}
-                      transition={{ duration: 1, ease: EASE, delay: 0.3 + i * 0.08 }}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-            {data && data.top_staff.length === 0 && <li className="py-6 text-center text-[14px] text-ink-3">No data yet</li>}
-          </ul>
-        </Rise>
-      </div>
-    </div>
-  );
-}
-
-function ago(iso: string) {
-  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return zoned(iso).date;
-}
-
-function Kpi({ i, icon, label, value, tint, sub }: { i: number; icon: React.ReactNode; label: string; value?: number; tint: string; sub?: string }) {
-  const prev = useRef<number | undefined>(undefined);
-  const [bump, setBump] = useState(0);
-  useEffect(() => {
-    if (prev.current !== undefined && value !== undefined && value > prev.current) setBump((b) => b + 1);
-    prev.current = value;
-  }, [value]);
-  return (
-    <Rise i={i} className="glass sheen relative overflow-hidden p-4 sm:p-5">
-      <motion.span
-        key={bump}
-        className="pointer-events-none absolute inset-0 rounded-[inherit]"
-        initial={{ boxShadow: bump ? `inset 0 0 0 2px ${tint}88` : "inset 0 0 0 0 transparent" }}
-        animate={{ boxShadow: "inset 0 0 0 0px transparent" }}
-        transition={{ duration: 1.6 }}
-      />
-      <div className="flex items-center justify-between">
-        <p className="text-[13px] font-medium text-ink-2">{label}</p>
-        <span className="grid h-8 w-8 place-items-center rounded-xl [&>svg]:h-4 [&>svg]:w-4" style={{ background: `${tint}1f`, color: tint }}>
-          {icon}
-        </span>
-      </div>
-      <p className="num mt-3 text-[34px] font-semibold leading-none sm:text-[40px]">{value === undefined ? "—" : <Counter value={value} />}</p>
-      <p className="mt-1.5 h-4 text-[12px] text-ink-3">{sub}</p>
-    </Rise>
-  );
-}
-
-function TrendChart({ data }: { data?: Stats["trend"] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true });
-  const [hover, setHover] = useState<number | null>(null);
-  const max = Math.max(4, ...(data?.map((d) => d.count) ?? [0]));
-  const H = 180;
-  return (
-    <div ref={ref} className="relative mt-5">
-      <div className="flex h-[200px] items-end gap-1.5 sm:gap-2" onMouseLeave={() => setHover(null)}>
-        {(data ?? Array.from({ length: 14 }, (_, i) => ({ date: String(i), count: 0, flagged: 0 }))).map((d, i) => {
-          const h = (d.count / max) * H;
-          const fh = (d.flagged / max) * H;
-          const isToday = i === 13;
-          return (
-            <div
-              key={d.date}
-              className="relative flex h-full flex-1 flex-col items-center justify-end"
-              onMouseEnter={() => setHover(i)}
-              onTouchStart={() => setHover(i)}
-            >
-              <AnimatePresence>
-                {hover === i && data && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="glass-strong pointer-events-none absolute z-10 whitespace-nowrap rounded-xl px-2.5 py-1.5 text-[12px]"
-                    style={{ bottom: h + 10, borderRadius: 12 }}
-                  >
-                    <span className="num font-semibold">{d.count}</span> checks
-                    {d.flagged > 0 && <span className="text-danger"> · {d.flagged} flagged</span>}
-                    <span className="block text-[11px] text-ink-3">{d.date.slice(5).split("-").reverse().join("/")}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <motion.div
-                className={cx(
-                  "relative w-full max-w-[34px] overflow-hidden rounded-t-[8px] rounded-b-[3px]",
-                  isToday ? "bg-gradient-to-t from-blue to-sky" : "bg-gradient-to-t from-blue/55 to-sky/45",
-                  hover === i && "brightness-110",
-                )}
-                initial={{ height: 2 }}
-                animate={{ height: inView ? Math.max(2, h) : 2 }}
-                transition={{ type: "spring", stiffness: 140, damping: 20, delay: inView ? i * 0.035 : 0 }}
-              >
-                {fh > 0 && (
-                  <motion.div
-                    className="absolute inset-x-0 bottom-0 bg-danger/85"
-                    initial={{ height: 0 }}
-                    animate={{ height: fh }}
-                    transition={{ duration: 0.8, ease: EASE, delay: 0.4 + i * 0.035 }}
-                  />
-                )}
-              </motion.div>
             </div>
-          );
-        })}
+          )}
+          {data?.departments.length === 0 && <p className="p-6 text-center text-ink-2">لا توجد أقسام بها حاويات بعد. أضفها من صفحة الحاويات.</p>}
+          <ul>
+            {data?.departments
+              .filter((d) => d.total > 0)
+              .map((d) => {
+                const expanded = open === d.id;
+                const marks = [...d.containers]
+                  .sort((a, b) => Number(b.inspected) - Number(a.inspected))
+                  .map((c) => (!c.inspected ? "off" : c.open > 0 ? "issue" : "on") as "on" | "issue" | "off");
+                return (
+                  <li key={d.id} className="border-t border-ink/[0.07]">
+                    <button
+                      type="button"
+                      className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 text-start transition-colors duration-150 hover:bg-sky/[0.04] md:grid-cols-[auto_minmax(150px,1fr)_minmax(180px,1.4fr)_auto_auto]"
+                      aria-expanded={expanded}
+                      onClick={() => setOpen(expanded ? null : d.id)}
+                    >
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky/10 text-sky">
+                        <Icon name={d.icon} className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold">{d.name}</span>
+                        <span className="block text-[12.5px] text-ink-3">
+                          {d.last_at ? `آخر فحص ${agoAr(d.last_at)}${d.staff.length ? ` — ${d.staff.join("، ")}` : ""}` : "لم تبدأ الجولة"}
+                        </span>
+                      </span>
+                      <span className="col-span-3 md:col-span-1">
+                        <Scale marks={marks} label={`${d.done} من ${d.total}`} />
+                        <span className="mt-1 flex gap-3 text-[12.5px] text-ink-2">
+                          <span>
+                            أرضية <span className="num">{d.floor.done}/{d.floor.total}</span>
+                          </span>
+                          <span>
+                            أدوات حادة <span className="num">{d.sharps.done}/{d.sharps.total}</span>
+                          </span>
+                        </span>
+                      </span>
+                      <span className="hidden text-end md:block">
+                        <span className="num block text-[18px] font-bold">
+                          {d.done}/{d.total}
+                        </span>
+                        {d.open > 0 ? (
+                          <span className="chip chip-warn mt-0.5">
+                            <TriangleAlert className="h-3.5 w-3.5" aria-hidden /> <span className="num">{d.open}</span> مفتوحة
+                          </span>
+                        ) : d.done === d.total ? (
+                          <span className="chip chip-ok mt-0.5">اكتملت</span>
+                        ) : null}
+                      </span>
+                      <ChevronDown className={cx("h-5 w-5 text-ink-3 transition-transform duration-200", expanded && "rotate-180")} aria-hidden />
+                    </button>
+                    {expanded && (
+                      <div className="settle grid gap-2 bg-ink/[0.025] px-5 py-4 sm:grid-cols-2 2xl:grid-cols-3">
+                        {d.containers.map((c) => (
+                          <div key={c.id} className="flex items-center gap-3 rounded-2xl bg-white/85 p-3 ring-1 ring-ink/[0.06]">
+                            <KindTile kind={c.kind} size={40} />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[14.5px] font-bold">{c.location}</p>
+                              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-3">
+                                <CodeBadge code={c.code} />
+                                {c.inspected ? (
+                                  <span>
+                                    {c.by} — {zoned(c.at!).timeAr}
+                                    {c.entry === "qr" && <ScanLine className="ms-1 inline h-3.5 w-3.5 text-green" aria-label="بمسح الباركود" />}
+                                  </span>
+                                ) : (
+                                  <span>لم تُفحص</span>
+                                )}
+                              </p>
+                            </div>
+                            {c.inspected &&
+                              (c.nonCompliant === 0 ? (
+                                <span className="chip chip-ok">مطابقة</span>
+                              ) : c.open > 0 ? (
+                                <span className="chip chip-warn">ملاحظة مفتوحة</span>
+                              ) : (
+                                <span className="chip chip-info">عولجت</span>
+                              ))}
+                            {c.submission_id && (
+                              <Link href={`/admin/records?open=${c.submission_id}`} className="btn btn-ghost btn-sm btn-icon" aria-label={`تفاصيل فحص ${c.code}`}>
+                                <ChevronLeft className="h-4 w-4" aria-hidden />
+                              </Link>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+          </ul>
+        </Rise>
+
+        <div className="grid content-start gap-5">
+          <Rise i={2} className="glass p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-[18px]">ملاحظات تنتظر المعالجة</h2>
+              <Link href="/admin/observations" className="btn btn-ghost btn-sm">
+                الكل <ArrowLeft className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+            <p className="text-[13px] text-ink-3">الأقدم أولًا</p>
+            <ul className="mt-3 grid gap-2">
+              {data?.observations.length === 0 && <li className="rounded-2xl bg-[rgba(6,122,91,.08)] p-4 text-center text-[14px] text-green">لا توجد ملاحظات مفتوحة.</li>}
+              {data?.observations.map((o) => (
+                <li key={o.id}>
+                  <Link href={`/admin/observations?id=${encodeURIComponent(o.id)}`} className="block rounded-2xl bg-white/80 p-3 ring-1 ring-ink/[0.06] transition-colors duration-150 hover:bg-white">
+                    <span className="flex items-center gap-2">
+                      <span className={cx("chip", o.status === "open" ? "chip-warn" : "chip-info")}>{OBS_STATUS[o.status].ar}</span>
+                      <span className="flex items-center gap-1 text-[12.5px] text-ink-3">
+                        <Clock className="h-3.5 w-3.5" aria-hidden /> {agoAr(o.submitted_at)}
+                      </span>
+                    </span>
+                    <span className="mt-1.5 block text-[14.5px] font-bold">{o.label_ar}</span>
+                    {o.note && <span className="block truncate text-[13.5px] text-ink-2">{o.note}</span>}
+                    <span className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-3">
+                      {o.department}
+                      {o.container && (
+                        <>
+                          <span aria-hidden>—</span> {o.container.location} <CodeBadge code={o.container.code} />
+                        </>
+                      )}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+              {!data && [0, 1, 2].map((i) => <li key={i} className="skeleton h-24" />)}
+            </ul>
+          </Rise>
+
+          <Rise i={3} className="glass p-5">
+            <h2 className="text-[18px]">آخر 14 يومًا</h2>
+            <p className="text-[13px] text-ink-3">عدد الحاويات المفحوصة يوميًا، والجزء البرتقالي ما كان به عدم مطابقة</p>
+            <div className="mt-4 flex h-28 items-end gap-1.5" role="img" aria-label="رسم الحاويات المفحوصة يوميًا خلال 14 يومًا">
+              {data?.trend.map((d) => (
+                <div key={d.date} className="flex h-full flex-1 flex-col justify-end" title={`${d.date}: ${d.inspected} فُحصت، ${d.non_compliant} بها عدم مطابقة`}>
+                  <div className="flex flex-col overflow-hidden rounded-t-md" style={{ height: `${(d.inspected / maxTrend) * 100}%` }}>
+                    <div className="bg-[#d68a0e]" style={{ height: `${d.inspected ? (d.non_compliant / d.inspected) * 100 : 0}%` }} />
+                    <div className="flex-1 bg-sky/70" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {data && (
+              <table className="sr-only">
+                <caption>الحاويات المفحوصة يوميًا</caption>
+                <tbody>
+                  {data.trend.map((d) => (
+                    <tr key={d.date}>
+                      <th>{d.date}</th>
+                      <td>{d.inspected}</td>
+                      <td>{d.non_compliant}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <div className="mt-1 flex justify-between text-[12px] text-ink-3">
+              <span className="num" dir="ltr">{data?.trend[0]?.date.slice(5)}</span>
+              <span className="num" dir="ltr">{data?.trend.at(-1)?.date.slice(5)}</span>
+            </div>
+          </Rise>
+
+          {t && t.lists.total > 0 && (
+            <Rise i={4} className="glass p-5">
+              <h2 className="text-[16px]">القوائم الأخرى</h2>
+              <p className="mt-1 text-[14px] text-ink-2">
+                سُجّلت <span className="num font-bold">{t.lists.done}</span> من <span className="num">{t.lists.total}</span> قوائم في هذا اليوم.
+              </p>
+            </Rise>
+          )}
+        </div>
       </div>
-      <div className="mt-2 flex gap-1.5 sm:gap-2">
-        {data?.map((d, i) => (
-          <span key={d.date} className={cx("num flex-1 text-center text-[10px]", i === 13 ? "font-semibold text-ink" : "text-ink-3")}>
-            {i % 2 === 1 || i === 13 ? d.date.slice(8) : ""}
-          </span>
-        ))}
-      </div>
+
+      {data && data.recent.length > 0 && (
+        <Rise i={4} className="glass-strong mt-5 overflow-x-auto">
+          <h2 className="px-5 pt-4 text-[18px]">آخر الفحوص</h2>
+          <table className="table mt-2 min-w-[640px]">
+            <thead>
+              <tr>
+                <th>الحاوية</th>
+                <th>القسم</th>
+                <th>الفاحص</th>
+                <th>الوقت</th>
+                <th>النتيجة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.recent.map((r) => (
+                <tr key={r.id}>
+                  <td>
+                    <Link href={`/admin/records?open=${r.id}`} className="flex items-center gap-2.5 font-bold hover:text-sky">
+                      {r.kind && <KindTile kind={r.kind} size={30} />}
+                      {r.title} {r.code && <CodeBadge code={r.code} />}
+                    </Link>
+                  </td>
+                  <td>{r.department}</td>
+                  <td>{r.employee_name}</td>
+                  <td className="num">{zoned(r.submitted_at).timeAr}</td>
+                  <td>
+                    {r.nonCompliant === 0 ? (
+                      <span className="chip chip-ok">مطابقة</span>
+                    ) : (
+                      <span className="chip chip-warn">
+                        <span className="num">{r.nonCompliant}</span> غير مطابق{r.open ? ` · ${r.open} مفتوحة` : ""}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Rise>
+      )}
     </div>
   );
 }
 
-function Sparkline({ c }: { c: Stats["per_checklist"][number] }) {
-  const pts = c.series.filter((p) => p.value !== null) as { at: string; value: number }[];
-  const W = 300;
-  const H = 70;
-  if (pts.length < 2)
-    return <div className="mt-4 grid h-[70px] place-items-center rounded-xl bg-white/[0.06] text-[12px] text-ink-3">Trend appears after 2 checks</div>;
-  const vals = pts.map((p) => p.value);
-  let lo = Math.min(...vals, c.min ?? Infinity);
-  let hi = Math.max(...vals, c.max ?? -Infinity);
-  if (hi - lo < 1) {
-    hi += 0.5;
-    lo -= 0.5;
-  }
-  const pad = (hi - lo) * 0.15;
-  lo -= pad;
-  hi += pad;
-  const x = (i: number) => (i / (pts.length - 1)) * W;
-  const y = (v: number) => H - ((v - lo) / (hi - lo)) * H;
-  const d = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
-  const last = pts[pts.length - 1];
-  const out = (v: number) => (c.min != null && v < c.min) || (c.max != null && v > c.max);
-  const gid = `g-${c.id}`;
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="mt-4">
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-[70px] w-full overflow-visible" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id={gid} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor={c.color} stopOpacity="0.28" />
-            <stop offset="1" stopColor={c.color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {c.min != null && c.max != null && (
-          <rect x="0" width={W} y={y(Math.min(c.max, hi))} height={Math.max(0, y(Math.max(c.min, lo)) - y(Math.min(c.max, hi)))} fill="rgba(4,166,122,.07)" />
-        )}
-        <motion.path
-          d={`${d} L${W},${H} L0,${H} Z`}
-          fill={`url(#${gid})`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.6 }}
-        />
-        <motion.path
-          d={d}
-          fill="none"
-          stroke={c.color}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1.3, ease: EASE, delay: 0.2 }}
-        />
-        {pts.map((p, i) =>
-          out(p.value) ? <circle key={i} cx={x(i)} cy={y(p.value)} r="3" fill="var(--danger)" vectorEffect="non-scaling-stroke" /> : null,
-        )}
-      </svg>
-      <div className="mt-1 flex items-baseline justify-between">
-        <span className="text-[12px] text-ink-3">
-          {c.primary_label}
-          {c.min != null && c.max != null ? ` · normal ${c.min}–${c.max}${c.primary_unit}` : ""}
-        </span>
-        <span className={cx("num text-[18px] font-semibold", out(last.value) ? "text-danger" : "text-ink")}>
-          {last.value}
-          <span className="text-[12px] font-normal text-ink-3">{c.primary_unit}</span>
-        </span>
-      </div>
+    <div className="border-t border-white/15 pt-3 sm:[&:not(:nth-child(2))]:border-s sm:[&:not(:nth-child(2))]:ps-5 xl:border-s xl:border-t-0 xl:ps-5 xl:pt-0">
+      <p className="muted text-[13.5px]">{label}</p>
+      <p className="num mt-1 text-[28px] font-bold leading-tight">{value}</p>
+      {hint && <p className="muted mt-0.5 text-[12.5px]">{hint}</p>}
     </div>
   );
-}
-
-/** Ticks every second on its own so the rest of the dashboard doesn't re-render. */
-function Since({ at }: { at: string }) {
-  const now = useNow();
-  const s = now ? Math.max(0, Math.round((now.getTime() - new Date(at).getTime()) / 1000)) : 0;
-  return <>{s}s ago</>;
 }

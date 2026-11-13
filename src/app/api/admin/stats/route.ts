@@ -101,6 +101,6 @@ function summarize(c: Checklist, values: Record<string, FieldValue>) {
     const missing = checks.filter((f) => values[f.key] === false).length;
     parts.push(`${checks.length - missing}/${checks.length} ✓${missing ? ` · ${missing} missing` : ""}`);
   }
-  for (const f of c.fields) if (f.type !== "check" && f.type !== "heading") parts.push(formatValue(f, values[f.key]));
+  for (const f of c.fields) if (f.type !== "check" && f.type !== "heading" && f.type !== "container") parts.push(formatValue(f, values[f.key]));
   return parts.filter(Boolean).slice(0, 6).join(" · ");
 }

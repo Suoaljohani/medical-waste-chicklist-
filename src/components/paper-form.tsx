@@ -48,7 +48,7 @@ function chunk<T>(list: T[], per: number) {
 export function photosOf(r: ReportInput): Photo[] {
   const out: Photo[] = [];
   for (const s of r.rows)
-    for (const f of r.checklist.fields) {
+    for (const f of r.checklist.fields.filter((x) => x.type !== "container")) {
       const src = s.photos?.[f.key];
       if (src) out.push({ src, label: f.label_en, at: s.submitted_at, name: s.employee_name });
     }
@@ -63,7 +63,7 @@ export function reportPages(r: ReportInput): ReportPageSpec[] {
     const G = GRID[c.orientation];
     for (const cols of chunk<Submission | null>(r.rows, G.cols)) {
       while (cols.length < G.cols) cols.push(null);
-      for (const fields of chunk(c.fields, G.rows)) pages.push({ kind: "grid", cols, fields });
+      for (const fields of chunk(c.fields.filter((x) => x.type !== "container"), G.rows)) pages.push({ kind: "grid", cols, fields });
     }
   } else {
     for (const rows of paginate(r.rows, PAGE[c.orientation].rows)) pages.push({ kind: "table", rows });

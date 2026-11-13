@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/public/repor
   await connection();
   const { id } = await ctx.params;
   const p = req.nextUrl.searchParams;
-  if (!checkReportToken(id, p.get("t"))) return Response.json({ error: "This report link is not valid" }, { status: 403 });
+  if (!checkReportToken(id, p.get("t"))) return Response.json({ error: "رابط التقرير غير صالح" }, { status: 403 });
   const s = store();
   const checklist = await s.get("checklists", id);
   if (!checklist) return Response.json({ error: "Not found" }, { status: 404 });

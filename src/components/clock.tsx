@@ -14,13 +14,19 @@ export function useNow(interval = 1000) {
   return now;
 }
 
+/** Day, date and time in hospital time. Updates once a minute; there is nothing to gain from seconds. */
 export function LiveClock({ className = "" }: { className?: string }) {
-  const now = useNow();
+  const now = useNow(30_000);
   const z = now ? zoned(now) : null;
   return (
-    <div className={`flex items-center gap-2 text-[13px] text-ink-2 ${className}`} aria-live="off">
-      <span className="pulse-dot" aria-hidden />
-      <span className="num tabular-nums">{z ? `${z.day} · ${z.date} · ${z.time}` : "—"}</span>
-    </div>
+    <p className={`text-[13.5px] text-ink-2 ${className}`}>
+      {z ? (
+        <>
+          {z.dayAr} <span className="num" dir="ltr">{z.date}</span> — <span className="num">{z.timeAr}</span>
+        </>
+      ) : (
+        "…"
+      )}
+    </p>
   );
 }

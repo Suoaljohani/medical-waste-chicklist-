@@ -50,7 +50,7 @@ export function useStaff() {
       body: JSON.stringify({ employee_no, password }),
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || "Could not sign in");
+    if (!r.ok) throw new Error(j.error || "تعذّر تسجيل الدخول");
     setStaff({ name: j.name, no: j.no });
   }
   async function signOut() {

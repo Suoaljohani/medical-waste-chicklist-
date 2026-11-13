@@ -31,6 +31,6 @@ export const defaultSettings: Settings = {
     "الشئون الصحية بمحافظة القريات",
     "مستشفى الحديثة العام",
   ],
-  copyright_owner: "MAlanazi354",
+  copyright_owner: "Talanize",
   timezone: "Asia/Riyadh",
 };

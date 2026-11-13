@@ -282,7 +282,7 @@ export async function exportWord(r: ReportInput) {
           ],
         }),
       ];
-      for (const f of c.fields) {
+      for (const f of c.fields.filter((x) => x.type !== "container")) {
         if (f.type === "heading") {
           trs.push(new TableRow({ children: [small(f.label_en.toUpperCase(), { bold: true, fill: "E8EEF2", span })] }));
           continue;
