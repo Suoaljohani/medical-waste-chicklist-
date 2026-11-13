@@ -74,7 +74,7 @@ export function Dashboard() {
         <Metric label="الملاحظات المفتوحة" value={data ? String(openNotes) : "…"} hint="في فحوص الفترة" tone={openNotes ? "warn" : undefined} />
         <Metric label="المطابقة" value={compliance === null ? "—" : <bdi dir="ltr">{compliance}%</bdi>} hint={inspected ? `${compliant} من ${inspected} حاوية مفحوصة` : "لا فحوص بعد"} />
       </section>
-      <p className="mt-2 px-1 text-[13px] text-ink-2">
+      <p className="on-photo mt-2 px-1 text-[13px] text-ink-2">
         التغطية = الحاويات المطلوبة التي لها فحص محفوظ في الفترة ÷ الحاويات المطلوبة. المطابقة مقياس مستقل: الحاويات المفحوصة بلا بند غير مطابق ÷ الحاويات المفحوصة.
       </p>
 
@@ -189,7 +189,7 @@ export function Dashboard() {
             {data && notes.length === 0 && <li className="rounded-[12px] border border-[var(--divider)] bg-[var(--success-surface)] p-4 text-center text-[15px] text-[var(--success)]">لا توجد ملاحظات مفتوحة.</li>}
             {notes.map((o) => (
               <li key={o.id}>
-                <Link href={`/admin/observations?id=${encodeURIComponent(o.id)}`} className="row-hit block rounded-[12px] border border-[var(--divider)] bg-field p-3">
+                <Link href={`/admin/observations?id=${encodeURIComponent(o.id)}`} className="row-hit block rounded-[12px] border border-[var(--divider)] bg-[var(--glass-inset)] p-3">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className={cx("chip", o.status === "open" ? "chip-warn" : "chip-info")}>{OBS_STATUS[o.status].ar}</span>
                     <span className="flex items-center gap-1 text-[13px] text-ink-2">
@@ -312,7 +312,7 @@ export function Dashboard() {
               {[...open.containers]
                 .sort((a, b) => Number(a.inspected) - Number(b.inspected))
                 .map((c) => (
-                  <li key={c.id} className="flex items-center gap-3 rounded-[12px] border border-[var(--divider)] bg-field p-3">
+                  <li key={c.id} className="flex items-center gap-3 rounded-[12px] border border-[var(--divider)] bg-[var(--glass-inset)] p-3">
                     <KindTile kind={c.kind} size={40} />
                     <div className="min-w-0 flex-1">
                       <p className="flex flex-wrap items-center gap-2">

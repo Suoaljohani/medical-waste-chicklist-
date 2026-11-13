@@ -109,7 +109,7 @@ export function HomeView() {
           </div>
 
           {/* Three separate facts, each with its own meaning. */}
-          <dl className="mt-5 grid grid-cols-3 divide-x divide-x-reverse divide-[var(--divider)] rounded-[12px] border border-[var(--divider)] bg-field py-3 text-center">
+          <dl className="mt-5 grid grid-cols-3 divide-x divide-x-reverse divide-[var(--divider)] rounded-[12px] border border-[var(--divider)] bg-[var(--glass-inset)] py-3 text-center">
             <div className="px-2">
               <dt className="text-[14px] text-ink-2">فُحصت اليوم</dt>
               <dd className="num mt-0.5 text-[22px] font-bold leading-tight">

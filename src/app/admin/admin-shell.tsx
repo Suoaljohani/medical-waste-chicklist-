@@ -151,7 +151,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         <div className="min-w-0 flex-1 pb-10">
           <div className="mb-4 lg:hidden">
-            <div className="flex items-center justify-between gap-3">
+            <div className="glass-toolbar flex items-center justify-between gap-3 px-3 py-2.5">
               <Wordmark compact href="/admin" />
               <button onClick={logout} className="btn btn-ghost btn-sm">
                 <LogOut className="h-4 w-4" aria-hidden /> خروج

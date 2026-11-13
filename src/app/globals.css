@@ -55,6 +55,9 @@
   --radius-badge: 8px;
   --rim: inset 0 1px 0 rgb(232 242 238 / 8%);
   --lift: 0 16px 40px rgb(0 0 0 / 16%);
+  --card-blur: 28px;
+  /* Recessed areas inside a glass card (summary strips, segmented controls, icon tiles). */
+  --glass-inset: rgb(6 27 36 / 38%);
 
   /* Layout */
   --layout-max: 1360px;
@@ -220,18 +223,26 @@ body {
   }
 
   /* ---------- Surfaces ---------- */
-  /* Work surface: opaque, so numbers and questions read the same over any part of the photograph. */
+  /* Cards: frosted glass over the photograph. Tinted dark enough that body text keeps
+     at least 7:1 against the brightest part of the image; blur removes the detail behind. */
   .glass,
   .glass-strong,
   .surface {
     position: relative;
-    background: var(--surface);
-    border: 1px solid var(--divider);
+    background: linear-gradient(160deg, rgb(28 64 74 / 52%) 0%, rgb(16 45 54 / 44%) 55%, rgb(11 35 45 / 50%) 100%);
+    border: 1px solid rgb(232 242 238 / 15%);
     border-radius: var(--radius-panel);
-    box-shadow: var(--rim), var(--lift);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 12%),
+      inset 0 0 0 1px rgb(255 255 255 / 2%),
+      0 18px 44px rgb(0 0 0 / 26%);
+    -webkit-backdrop-filter: blur(var(--card-blur)) saturate(150%);
+    backdrop-filter: blur(var(--card-blur)) saturate(150%);
   }
+  /* Dialogs sit over other content, so they stay denser. */
   .glass-strong {
     border-radius: var(--radius-dialog);
+    background: linear-gradient(160deg, rgb(28 64 74 / 86%) 0%, rgb(16 45 54 / 84%) 100%);
   }
   .surface-raised,
   .glass-ink {
@@ -243,6 +254,29 @@ body {
   }
   .glass-ink .muted {
     color: var(--text-secondary);
+  }
+  /* Text set straight on the photograph (page titles, section heads, footer):
+     a soft dark halo keeps it readable over the brightest part of the image. */
+  .on-photo {
+    text-shadow:
+      0 0 1px rgb(6 27 36),
+      0 0 6px rgb(6 27 36 / 95%),
+      0 0 14px rgb(6 27 36 / 95%),
+      0 0 28px rgb(6 27 36 / 85%),
+      0 0 48px rgb(6 27 36 / 60%);
+  }
+  /* On phones the photograph is bright right behind the page title, so it gets its own glass bar. */
+  @media (max-width: 767px) {
+    .page-title {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgb(16 45 54 / 92%);
+      border: 1px solid rgb(232 242 238 / 14%);
+      border-radius: var(--radius-panel);
+      box-shadow: var(--rim);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    }
   }
   /* Glass: navigation and toolbars only, on small areas. */
   .glass-thin,
@@ -516,7 +550,7 @@ body {
     gap: 4px;
     padding: 4px;
     border-radius: 14px;
-    background: var(--field-background);
+    background: var(--glass-inset);
     border: 1px solid var(--divider);
   }
   .seg > button,
@@ -601,7 +635,7 @@ body {
     text-align: start;
     font-size: 14px;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     padding: 12px 16px;
     white-space: nowrap;
   }
@@ -655,6 +689,9 @@ body {
 
   /* ---------- Fallbacks ---------- */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-strong,
+    .surface,
     .glass-thin,
     .glass-nav,
     .glass-toolbar {
@@ -662,6 +699,9 @@ body {
     }
   }
   @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .glass,
+    .glass-strong,
+    .surface,
     .glass-thin,
     .glass-nav,
     .glass-toolbar {

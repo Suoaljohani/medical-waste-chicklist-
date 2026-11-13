@@ -263,7 +263,7 @@ export function Containers() {
                     role="radio"
                     aria-checked={form.kind === k}
                     onClick={() => setForm({ ...form, kind: k })}
-                    className={cx("flex items-center gap-3 rounded-2xl border p-3 text-start transition-colors", form.kind === k ? "border-[var(--action)] bg-raised" : "border-[var(--control-border)] bg-field")}
+                    className={cx("flex items-center gap-3 rounded-2xl border p-3 text-start transition-colors", form.kind === k ? "border-[var(--action)] bg-raised" : "border-[var(--control-border)] bg-[var(--glass-inset)]")}
                   >
                     <KindTile kind={k} size={40} />
                     <span className="font-bold">{KIND[k].ar}</span>

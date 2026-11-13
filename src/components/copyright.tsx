@@ -15,7 +15,7 @@ export function Copyright() {
   }, []);
 
   return (
-    <footer className="px-4 pb-[max(20px,env(safe-area-inset-bottom))] pt-10 text-center text-[12.5px] text-ink-3 print:hidden">
+    <footer className="px-4 pb-[max(20px,env(safe-area-inset-bottom))] pt-10 on-photo text-center text-[13px] text-ink-2 print:hidden">
       <p>
         © <span className="num">{year}</span> <span className="code text-ink-2">{owner}</span> — جميع الحقوق محفوظة
       </p>

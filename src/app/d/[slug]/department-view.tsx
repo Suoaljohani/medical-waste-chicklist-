@@ -210,7 +210,7 @@ export function DepartmentView() {
 
       {(rows.length > 0 || !data) && (
         <section aria-labelledby="ctn" className="mt-5">
-          <h2 id="ctn" className="mb-3 px-1 text-[20px] sm:text-[22px]">
+          <h2 id="ctn" className="on-photo mb-3 px-1 text-[20px] sm:text-[22px]">
             الحاويات
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -331,7 +331,7 @@ export function DepartmentView() {
 
       {lists.length > 0 && (
         <section aria-labelledby="lists" className="mt-6">
-          <h2 id="lists" className="mb-3 px-1 text-[20px]">
+          <h2 id="lists" className="on-photo mb-3 px-1 text-[20px]">
             السجلات التشغيلية للقسم
           </h2>
           <ul className="glass divide-y divide-[var(--divider)] overflow-hidden">

@@ -12,7 +12,7 @@ export function KindTile({ kind, size = 48 }: { kind: ContainerKind; size?: numb
   const G = kind === "floor" ? FloorBin : SharpsBox;
   return (
     <span
-      className="relative grid shrink-0 place-items-center overflow-hidden border border-[var(--control-border)] bg-field text-ink"
+      className="relative grid shrink-0 place-items-center overflow-hidden border border-[var(--control-border)] bg-[var(--glass-inset)] text-ink"
       style={{ width: size, height: size, borderRadius: Math.round(size * 0.26) }}
       aria-hidden
     >
@@ -24,7 +24,7 @@ export function KindTile({ kind, size = 48 }: { kind: ContainerKind; size?: numb
 
 export function CodeBadge({ code, className }: { code: string; className?: string }) {
   return (
-    <bdi translate="no" className={cx("code rounded-[8px] border border-[var(--divider)] bg-field px-2 py-0.5 text-[14px] text-ink", className)}>
+    <bdi translate="no" className={cx("code rounded-[8px] border border-[var(--divider)] bg-[var(--glass-inset)] px-2 py-0.5 text-[14px] text-ink", className)}>
       {code}
     </bdi>
   );

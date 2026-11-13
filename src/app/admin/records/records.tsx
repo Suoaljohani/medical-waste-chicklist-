@@ -298,7 +298,7 @@ function RecordDetail({ id, onClose, onDelete, onSaved }: { id: string | null; o
                 </p>
               </div>
             </div>
-            <ul className="mt-4 divide-y divide-ink/[0.07] rounded-[12px] border border-[var(--divider)] bg-field">
+            <ul className="mt-4 divide-y divide-ink/[0.07] rounded-[12px] border border-[var(--divider)] bg-[var(--glass-inset)]">
               {c?.fields
                 .filter((f) => !isInfoField(f))
                 .map((f) => {

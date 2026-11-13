@@ -62,7 +62,7 @@ export function StaffGate({ onReady }: { onReady?: () => void }) {
           <UserRound className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[12.5px] text-ink-3">القائم بالجولة</p>
+          <p className="text-[14px] text-ink-2">القائم بالجولة</p>
           <p className="truncate font-bold">{staff.name}</p>
         </div>
         {mode === "accounts" ? (

@@ -302,7 +302,7 @@ export function ChecklistForm() {
             {info && (
               <p className="flex flex-wrap items-center gap-2">
                 <CodeBadge code={info.code} className="text-[16px]" />
-                <span className="text-[14px] text-ink-2">{info.kind === "floor" ? "حاوية أرضية" : "حاوية أدوات حادة"}</span>
+                <span className="text-[15px] text-ink">{info.kind === "floor" ? "حاوية أرضية" : "حاوية أدوات حادة"}</span>
               </p>
             )}
             <h1 id="ctn-title" className="mt-1 text-[24px] sm:text-[32px]">
@@ -444,7 +444,7 @@ function missingText(n: number) {
 
 function Meta({ k, v }: { k: string; v: React.ReactNode }) {
   return (
-    <div className="min-w-0 rounded-[12px] border border-[var(--divider)] bg-field px-3 py-2">
+    <div className="min-w-0 rounded-[12px] border border-[var(--divider)] bg-[var(--glass-inset)] px-3 py-2">
       <dt className="text-[14px] text-ink-2">{k}</dt>
       <dd className="truncate text-[16px] font-bold">{v}</dd>
     </div>
@@ -507,7 +507,7 @@ async function compress(file: File) {
 function PhotoSlot({ photo, cam, onRemove, required }: { photo?: string; cam: ReturnType<typeof useCamera>; onRemove: () => void; required?: boolean }) {
   if (photo)
     return (
-      <div className="flex items-center gap-3 rounded-[12px] border border-[var(--divider)] bg-field p-2">
+      <div className="flex items-center gap-3 rounded-[12px] border border-[var(--divider)] bg-[var(--glass-inset)] p-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={photo} alt="الصورة المرفقة" width={64} height={64} className="h-16 w-16 rounded-[10px] object-cover" />
         <span className="flex-1 text-[14px] font-bold text-[var(--success)]">
@@ -590,7 +590,7 @@ function ItemRow({
               key={String(o.v)}
               className={cx(
                 "relative flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[12px] border px-3 py-2 text-center text-[16px] font-bold transition-colors duration-[160ms] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--focus-ring)]",
-                checked ? o.on : "border-[var(--control-border)] bg-field text-ink hover:border-ink-2",
+                checked ? o.on : "border-[var(--control-border)] bg-[var(--glass-inset)] text-ink hover:border-ink-2",
               )}
             >
               <input

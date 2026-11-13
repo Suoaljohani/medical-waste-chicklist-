@@ -44,9 +44,9 @@ export async function api<T = unknown>(url: string, method: string, body?: unkno
 export function PageTitle({ title, sub, children }: { title: string; sub?: string; children?: React.ReactNode }) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-[24px] md:text-[32px]">{title}</h1>
-        {sub && <p className="mt-0.5 text-[16px] text-ink-2">{sub}</p>}
+      <div className="page-title">
+        <h1 className="on-photo text-[24px] md:text-[32px]">{title}</h1>
+        {sub && <p className="on-photo mt-0.5 text-[16px] text-ink-2">{sub}</p>}
       </div>
       {children && <div className="flex flex-wrap gap-2">{children}</div>}
     </div>

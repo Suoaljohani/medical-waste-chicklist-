@@ -228,7 +228,7 @@ export function ChecklistsPage() {
               type="button"
               onClick={() => makeSheet(kind)}
               disabled={!!sheet}
-              className="flex flex-col items-start gap-1.5 rounded-2xl border border-[var(--control-border)] bg-field p-4 text-start transition-colors hover:bg-raised disabled:opacity-60"
+              className="flex flex-col items-start gap-1.5 rounded-2xl border border-[var(--control-border)] bg-[var(--glass-inset)] p-4 text-start transition-colors hover:bg-raised disabled:opacity-60"
             >
               <span className="flex items-center gap-2 font-semibold">
                 {sheet?.kind === kind ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Ico className="h-4 w-4" />} {en}
@@ -338,7 +338,7 @@ function Editor({ draft, deps, onClose, onSaved }: { draft: Draft | null; deps: 
               <button
                 type="button"
                 onClick={() => applyTemplate(null)}
-                className={cx("btn btn-sm border", !picked ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-field text-ink-2")}
+                className={cx("btn btn-sm border", !picked ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-[var(--glass-inset)] text-ink-2")}
               >
                 <Plus className="h-3.5 w-3.5" /> Blank
               </button>
@@ -347,7 +347,7 @@ function Editor({ draft, deps, onClose, onSaved }: { draft: Draft | null; deps: 
                   key={t.name}
                   type="button"
                   onClick={() => applyTemplate(t)}
-                  className={cx("btn btn-sm border", picked === t.name ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-field text-ink-2")}
+                  className={cx("btn btn-sm border", picked === t.name ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-[var(--glass-inset)] text-ink-2")}
                 >
                   <Icon name={t.icon} className="h-3.5 w-3.5" /> {t.name}
                 </button>
@@ -382,7 +382,7 @@ function Editor({ draft, deps, onClose, onSaved }: { draft: Draft | null; deps: 
                 key={o}
                 type="button"
                 onClick={() => setD({ ...d, orientation: o })}
-                className={cx("btn btn-sm border capitalize", d.orientation === o ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-field text-ink-2")}
+                className={cx("btn btn-sm border capitalize", d.orientation === o ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-[var(--glass-inset)] text-ink-2")}
               >
                 {o === "portrait" ? "عمودي" : "أفقي"}
               </button>
@@ -412,7 +412,7 @@ function Editor({ draft, deps, onClose, onSaved }: { draft: Draft | null; deps: 
                 key={l}
                 type="button"
                 onClick={() => setD({ ...d, layout: v ?? null })}
-                className={cx("btn btn-sm border", (d.layout ?? undefined) === v ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-field text-ink-2")}
+                className={cx("btn btn-sm border", (d.layout ?? undefined) === v ? "border-[var(--action)] bg-raised text-ink" : "border-[var(--control-border)] bg-[var(--glass-inset)] text-ink-2")}
               >
                 {l}
               </button>
@@ -431,7 +431,7 @@ function Editor({ draft, deps, onClose, onSaved }: { draft: Draft | null; deps: 
                 onClick={() => setD({ ...d, icon: name })}
                 className={cx(
                   "grid aspect-square place-items-center rounded-xl transition-colors",
-                  d.icon === name ? "text-white" : "bg-field text-ink-2 hover:bg-raised",
+                  d.icon === name ? "text-white" : "bg-[var(--glass-inset)] text-ink-2 hover:bg-raised",
                 )}
                 style={d.icon === name ? { background: d.color } : undefined}
               >
@@ -466,7 +466,7 @@ function Editor({ draft, deps, onClose, onSaved }: { draft: Draft | null; deps: 
           <p className="mb-3 text-[12px] text-ink-3">التاريخ واليوم والوقت والوردية والاسم والتوقيع تُضاف تلقائيًا.</p>
           <Reorder.Group axis="y" values={fields} onReorder={(f) => setD({ ...d, fields: f })} className="flex flex-col gap-2">
             {fields.map((f, i) => (
-              <Reorder.Item key={f._k ?? f.key} value={f} className="rounded-2xl border border-[var(--divider)] bg-field p-3">
+              <Reorder.Item key={f._k ?? f.key} value={f} className="rounded-2xl border border-[var(--divider)] bg-[var(--glass-inset)] p-3">
                 <div className="grid gap-2 sm:grid-cols-[1fr_1fr_130px_auto]">
                   <input className="field sm" placeholder="النص بالإنجليزية (اختياري)" dir="ltr" value={f.label_en} onChange={(e) => setField(i, { label_en: e.target.value })} />
                   <input className="field sm" dir="rtl" placeholder="نص البند" value={f.label_ar} onChange={(e) => setField(i, { label_ar: e.target.value })} />
