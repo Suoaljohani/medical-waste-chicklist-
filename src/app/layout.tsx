@@ -14,12 +14,13 @@ const janna = localFont({
 });
 
 export const metadata: Metadata = {
-  title: { default: "تشييك حاويات النفايات الطبية · مستشفى الحديثة العام", template: "%s · تشييك الحاويات" },
-  description: "نظام تشييك حاويات النفايات الطبية في مستشفى الحديثة العام: جولات الفحص، الملاحظات والمتابعة.",
+  title: { default: "جولات النفايات الطبية · مستشفى الحديثة العام", template: "%s · جولات النفايات الطبية" },
+  description: "فحص الحاويات والسجلات التشغيلية للنفايات الطبية في مستشفى الحديثة العام.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#eaf2f9",
+  themeColor: "#061b24",
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-dvh flex-col">
         <a
           href="#content"
-          className="sr-only z-[70] rounded-xl bg-white px-4 py-3 font-bold text-sky shadow-lg focus:not-sr-only focus:fixed focus:start-3 focus:top-3"
+          className="sr-only z-[70] rounded-xl bg-raised px-4 py-3 font-bold text-ink shadow-lg focus:not-sr-only focus:fixed focus:start-3 focus:top-3"
         >
           تخطَّ إلى المحتوى
         </a>

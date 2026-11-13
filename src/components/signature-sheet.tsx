@@ -126,16 +126,16 @@ export function SignatureSheet({
       {mode === "saved" && saved ? (
         <div className="relative mt-4 flex h-[200px] items-center justify-center overflow-hidden rounded-2xl border border-ink/15 bg-white p-6 sm:h-[230px]">
           <img src={saved} alt={`توقيع ${name} المحفوظ`} className="max-h-full max-w-full object-contain" />
-          <span className="chip chip-ok absolute start-3 top-3">
+          <span className="chip chip-ok absolute start-3 top-3 !bg-[#e6f4ec] !text-[#11553a]">
             <Check className="h-3 w-3" strokeWidth={3} aria-hidden /> محفوظ على هذا الجهاز
           </span>
         </div>
       ) : (
         <div className="relative mt-4 overflow-hidden rounded-2xl border border-ink/15 bg-white">
           <canvas ref={canvasRef} className="block h-[200px] w-full touch-none sm:h-[230px]" aria-label="مساحة التوقيع" />
-          <div className="pointer-events-none absolute inset-x-6 bottom-12 border-b border-dashed border-ink/25" aria-hidden />
+          <div className="pointer-events-none absolute inset-x-6 bottom-12 border-b border-dashed border-[#9fb3b8]" aria-hidden />
           {empty && (
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-ink-3">
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#4d6268]">
               <PenLine className="h-6 w-6" strokeWidth={1.5} aria-hidden />
               <span className="text-[14px]">وقّع هنا</span>
             </div>
@@ -145,7 +145,7 @@ export function SignatureSheet({
 
       {mode === "draw" && (
         <label className="mt-4 flex min-h-11 items-center gap-2.5 text-[14.5px] text-ink-2">
-          <input type="checkbox" className="h-5 w-5 accent-[#0c6fae]" checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={busy} />
+          <input type="checkbox" className="h-5 w-5 accent-[var(--action)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={busy} />
           احفظ توقيعي على هذا الجهاز لبقية الجولة
         </label>
       )}

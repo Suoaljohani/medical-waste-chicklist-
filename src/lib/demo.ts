@@ -23,31 +23,32 @@ function rng(seed: number) {
   };
 }
 
-const DEPS: { id: string; slug: string; ar: string; en: string; icon: string; prefix: string; floor: string[]; sharps: string[]; today: number }[] = [
+/*
+ * Matches the worked example in the design specification: Emergency 14 of 16, Laboratory 9 of 12, Clinics 13 of 20
+ * inspected today (36 of 48, 75%), with 1, 0 and 2 open notes. `skip` lists the containers not inspected yet today,
+ * `issues` the ones inspected today with a non-compliant item.
+ */
+const DEPS: { id: string; slug: string; ar: string; en: string; icon: string; prefix: string; floor: string[]; sharps: string[]; skip: string[]; issues: string[] }[] = [
   {
-    id: "demo-er", slug: "er", ar: "قسم الطوارئ", en: "Emergency", icon: "Siren", prefix: "ER", today: 1,
-    floor: ["غرفة الفرز", "غرفة الإنعاش", "ممر الملاحظة", "غرفة الضماد", "محطة التمريض"],
-    sharps: ["غرفة الفرز · الجدار الأيمن", "غرفة الإنعاش · السرير 1", "غرفة الإنعاش · السرير 2", "غرفة الضماد"],
+    id: "demo-er", slug: "er", ar: "الطوارئ", en: "Emergency", icon: "Siren", prefix: "ER",
+    floor: ["غرفة الفرز", "غرفة الإنعاش", "ممر الملاحظة", "غرفة الضماد", "محطة التمريض", "غرفة العزل", "غرفة الإجراءات", "مستودع المستهلكات", "ممر الإسعاف"],
+    sharps: ["غرفة الفرز · الجدار الأيمن", "غرفة الإنعاش · السرير 1", "بجانب غرفة الإجراءات", "غرفة الضماد", "غرفة العزل", "عربة الأدوية", "غرفة الإنعاش · السرير 2"],
+    skip: ["ER-SH-03", "ER-SH-06"],
+    issues: ["ER-FL-04"],
   },
   {
-    id: "demo-ward", slug: "ward", ar: "التنويم · الباطنة", en: "Medical ward", icon: "BedDouble", prefix: "MW", today: 0.6,
-    floor: ["غرفة 101", "غرفة 102", "غرفة 103", "غرفة العزل", "محطة التمريض", "غرفة التحضير"],
-    sharps: ["عربة الأدوية", "غرفة التحضير", "غرفة العزل", "محطة التمريض"],
+    id: "demo-lab", slug: "lab", ar: "المختبر", en: "Laboratory", icon: "FlaskConical", prefix: "LB",
+    floor: ["استلام العينات", "قسم الكيمياء", "قسم الأحياء الدقيقة", "بنك الدم", "قسم الدم", "غرفة التعقيم"],
+    sharps: ["سحب العينات · الكرسي 1", "سحب العينات · الكرسي 2", "قسم الدم", "بنك الدم", "قسم الكيمياء", "غرفة التعقيم"],
+    skip: ["LB-FL-05", "LB-SH-04", "LB-SH-06"],
+    issues: [],
   },
   {
-    id: "demo-opd", slug: "opd", ar: "العيادات الخارجية", en: "Outpatient clinics", icon: "Stethoscope", prefix: "OP", today: 0.4,
-    floor: ["عيادة 1", "عيادة 2", "عيادة الأسنان", "غرفة الحقن"],
-    sharps: ["غرفة الحقن", "عيادة الأسنان", "غرفة سحب العينات"],
-  },
-  {
-    id: "demo-lab", slug: "lab", ar: "المختبر", en: "Laboratory", icon: "FlaskConical", prefix: "LB", today: 0,
-    floor: ["استلام العينات", "قسم الكيمياء", "قسم الأحياء الدقيقة"],
-    sharps: ["سحب العينات · الكرسي 1", "سحب العينات · الكرسي 2", "قسم الدم"],
-  },
-  {
-    id: "demo-dialysis", slug: "dialysis", ar: "الغسيل الكلوي", en: "Dialysis", icon: "Droplets", prefix: "DL", today: 1,
-    floor: ["الصالة · الجهة اليمنى", "الصالة · الجهة اليسرى", "غرفة العزل"],
-    sharps: ["المحطة 1–3", "المحطة 4–6", "غرفة العزل"],
+    id: "demo-opd", slug: "opd", ar: "العيادات", en: "Outpatient clinics", icon: "Stethoscope", prefix: "OP",
+    floor: ["عيادة 1", "عيادة 2", "عيادة 3", "عيادة 4", "عيادة الأسنان", "غرفة الحقن", "غرفة الضماد", "الاستقبال", "عيادة الأطفال", "عيادة النساء", "ممر العيادات"],
+    sharps: ["غرفة الحقن", "عيادة الأسنان", "غرفة سحب العينات", "غرفة الضماد", "عيادة الأطفال", "عيادة النساء", "عيادة 1", "عيادة 2", "عيادة 3"],
+    skip: ["OP-FL-08", "OP-FL-10", "OP-FL-11", "OP-SH-06", "OP-SH-07", "OP-SH-08", "OP-SH-09"],
+    issues: ["OP-FL-02", "OP-SH-03"],
   },
 ];
 
@@ -74,11 +75,11 @@ export function demoDb(): FileDb {
 
   const departments: Department[] = DEPS.map((d, i) => ({ id: d.id, slug: d.slug, name_ar: d.ar, name_en: d.en, icon: d.icon, sort: i + 1, active: true, created_at: created }));
 
-  const containers: (Checklist & { today: number })[] = [];
+  const containers: (Checklist & { skip: boolean; issue: boolean })[] = [];
   for (const d of DEPS) {
     const add = (kind: ContainerKind, locs: string[]) =>
       locs.forEach((location, i) => {
-        const code = `${d.prefix}-${kind === "floor" ? "F" : "S"}-${String(i + 1).padStart(2, "0")}`;
+        const code = `${d.prefix}-${kind === "floor" ? "FL" : "SH"}-${String(i + 1).padStart(2, "0")}`;
         containers.push({
           id: `demo-${code.toLowerCase()}`,
           department_id: d.id,
@@ -89,7 +90,8 @@ export function demoDb(): FileDb {
           sort: containers.length + 1,
           active: true,
           created_at: created,
-          today: d.today,
+          skip: d.skip.includes(code),
+          issue: d.issues.includes(code),
         });
       });
     add("floor", d.floor);
@@ -99,35 +101,32 @@ export function demoDb(): FileDb {
   const submissions: Submission[] = [];
   let n = 0;
   for (let back = 13; back >= 0; back--) {
+    const isToday = back === 0;
+    // Today's round starts at 07:30 hospital time, or two hours ago if the preview is opened earlier than that.
+    const day = zoned(new Date(now.getTime() - back * DAY)).dayKey;
+    const start = new Date(`${day}T04:30:00.000Z`).getTime();
+    const dayStart = isToday ? Math.min(start, now.getTime() - 2 * 3600e3) : start;
+    const span = isToday ? Math.max(20 * 60e3, now.getTime() - dayStart - 5 * 60e3) : 6 * 3600e3;
     for (const c of containers) {
-      const isToday = back === 0;
-      // Earlier days: most containers were inspected. Today: each department is part-way through its round.
-      const share = isToday ? c.today : 0.93;
-      const order = containers.filter((x) => x.department_id === c.department_id).indexOf(c);
-      const size = containers.filter((x) => x.department_id === c.department_id).length;
-      const pick = isToday ? order / size < share : rand() < share;
-      if (!pick) continue;
-      // Between 07:30 and now (today) or 07:30–13:30 (earlier days), hospital time.
-      const dayStart = new Date(`${zoned(new Date(now.getTime() - back * DAY)).dayKey}T04:30:00.000Z`).getTime();
-      const span = isToday ? Math.max(20 * 60e3, Math.min(6 * 3600e3, now.getTime() - dayStart - 5 * 60e3)) : 6 * 3600e3;
-      const at = new Date(dayStart + (isToday ? (order / size) * span : rand() * span));
+      if (isToday ? c.skip : rand() > 0.94) continue;
+      const peers = containers.filter((x) => x.department_id === c.department_id);
+      const order = peers.indexOf(c);
+      const at = new Date(dayStart + (isToday ? (order / peers.length) * span : rand() * span));
       if (at.getTime() > now.getTime()) continue;
       const values: Record<string, FieldValue> = { __entry: rand() < 0.85 ? "qr" : "manual" };
       const items = c.fields.filter((f) => f.type === "check");
       for (const f of items) values[f.key] = true;
-      if (rand() < (isToday ? 0.2 : 0.07)) {
-        const f = items[Math.floor(rand() * items.length)];
+      // Today: exactly the listed containers have an open note. Earlier days: a few notes, all handled and closed.
+      if (isToday ? c.issue : rand() < 0.07) {
+        const f = items[(order + back) % items.length];
         const doc = NOTES[f.key]?.[0] ?? { note: "ملاحظة توضيحية", action: "" };
         values[f.key] = false;
         values[obsKey(f.key, "note")] = doc.note;
         if (doc.action) values[obsKey(f.key, "action")] = doc.action;
-        // Older ones are mostly handled; recent ones are still open.
-        const r = rand();
-        const st = back >= 4 ? (r < 0.85 ? "closed" : "progress") : back >= 1 ? (r < 0.4 ? "closed" : r < 0.7 ? "progress" : "open") : "open";
-        if (st !== "open") {
-          values[obsKey(f.key, "st")] = st;
-          values[obsKey(f.key, "fu")] = st === "closed" ? "تمت المعالجة والتحقق" : "أُحيلت إلى الخدمات البيئية";
-          values[obsKey(f.key, "at")] = new Date(Math.min(now.getTime(), at.getTime() + 5 * 3600e3)).toISOString();
+        if (!isToday) {
+          values[obsKey(f.key, "st")] = "closed";
+          values[obsKey(f.key, "fu")] = "تمت المعالجة والتحقق";
+          values[obsKey(f.key, "at")] = new Date(at.getTime() + 5 * 3600e3).toISOString();
         }
       }
       submissions.push({
@@ -150,8 +149,8 @@ export function demoDb(): FileDb {
 
   return {
     departments,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- drop the helper field
-    checklists: [...containers.map(({ today, ...c }) => c), ...lists],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- drop the helper fields
+    checklists: [...containers.map(({ skip, issue, ...c }) => c), ...lists],
     submissions,
     employees: [],
     settings: { ...defaultSettings, demo: true, demo_day: zoned(now).dayKey },

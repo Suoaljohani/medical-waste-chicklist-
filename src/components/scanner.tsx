@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { CameraOff, LoaderCircle, ScanLine } from "lucide-react";
+import { CameraOff, CircleCheck, LoaderCircle, RotateCcw, ScanLine, TriangleAlert } from "lucide-react";
 import { Modal } from "./modal";
 
-type State = "starting" | "scanning" | "denied" | "unsupported";
+type State = "starting" | "scanning" | "read" | "denied" | "unsupported";
 
 type Detector = { detect: (src: CanvasImageSource) => Promise<{ rawValue: string }[]> };
 
@@ -47,6 +47,7 @@ export function Scanner({ open, onClose }: { open: boolean; onClose: () => void 
   const video = useRef<HTMLVideoElement>(null);
   const [state, setState] = useState<State>("starting");
   const [wrong, setWrong] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -102,11 +103,19 @@ export function Scanner({ open, onClose }: { open: boolean; onClose: () => void 
           if (to) {
             stopped = true;
             navigator.vibrate?.(40);
-            onClose();
-            router.push(to);
+            // Confirm the read in words first; saving an inspection is a separate, later step.
+            setState("read");
+            stream?.getTracks().forEach((t) => t.stop());
+            setTimeout(() => {
+              onClose();
+              router.push(to);
+            }, 450);
             return;
           }
+          // Not one of ours: stop and let the person decide to try again.
+          stopped = true;
           setWrong(true);
+          return;
         }
         timer = setTimeout(tick, 180);
       };
@@ -119,36 +128,67 @@ export function Scanner({ open, onClose }: { open: boolean; onClose: () => void 
       clearTimeout(timer);
       stream?.getTracks().forEach((t) => t.stop());
     };
-  }, [open, onClose, router]);
+  }, [open, onClose, router, attempt]);
 
   return (
-    <Modal open={open} onClose={onClose} title="مسح باركود القسم">
+    <Modal open={open} onClose={onClose} title="مسح رمز القسم">
       {state === "denied" || state === "unsupported" ? (
-        <div className="rounded-2xl bg-ink/[0.05] p-5 text-center">
+        <div className="rounded-2xl border border-[var(--divider)] bg-raised p-5 text-center" role="alert">
           <CameraOff className="mx-auto h-8 w-8 text-ink-3" strokeWidth={1.6} aria-hidden />
           <p className="mt-3 font-bold">{state === "denied" ? "لم يُسمح باستخدام الكاميرا" : "الكاميرا غير متاحة في هذا المتصفح"}</p>
           <p className="mt-1 text-[14px] text-ink-2">
-            {state === "denied" ? "اسمح للموقع باستخدام الكاميرا من إعدادات المتصفح، أو" : "يمكنك"} مسح الباركود بتطبيق كاميرا الجوال، أو اختيار القسم من القائمة.
+            {state === "denied" ? "اسمح للموقع باستخدام الكاميرا من إعدادات المتصفح، أو" : "يمكنك"} فتح رمز القسم بكاميرا الجوال مباشرة، أو اختيار القسم من القائمة.
           </p>
-          <Link href="/" className="btn btn-primary mt-4 w-full" onClick={onClose}>
-            اختيار القسم من القائمة
+          <Link href="/#deps" className="btn btn-primary mt-4 w-full" onClick={onClose}>
+            اختيار القسم
           </Link>
         </div>
       ) : (
         <>
-          <div className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-[22px] bg-[#0f1b3d]">
+          <div className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-[18px] bg-env">
             <video ref={video} className="h-full w-full object-cover" playsInline muted aria-label="معاينة الكاميرا" />
-            <div className="pointer-events-none absolute inset-8 rounded-2xl border-2 border-white/85 shadow-[0_0_0_999px_rgba(15,27,61,.35)]" aria-hidden />
+            {/* Reading frame: four corners. */}
+            <div className="pointer-events-none absolute inset-10 shadow-[0_0_0_999px_rgb(3_14_19/45%)]" aria-hidden>
+              {["top-0 start-0 border-t-[3px] border-s-[3px] rounded-ss-xl", "top-0 end-0 border-t-[3px] border-e-[3px] rounded-se-xl", "bottom-0 start-0 border-b-[3px] border-s-[3px] rounded-es-xl", "bottom-0 end-0 border-b-[3px] border-e-[3px] rounded-ee-xl"].map((c) => (
+                <span key={c} className={`absolute h-10 w-10 ${state === "read" ? "border-[var(--success)]" : "border-[var(--action)]"} ${c}`} />
+              ))}
+            </div>
             {state === "starting" && (
-              <div className="absolute inset-0 grid place-items-center text-white">
+              <div className="absolute inset-0 grid place-items-center text-ink">
                 <LoaderCircle className="h-7 w-7 animate-spin" aria-hidden />
               </div>
             )}
+            {state === "read" && (
+              <div className="absolute inset-0 grid place-items-center bg-[rgb(3_14_19/55%)] text-[var(--success)]">
+                <CircleCheck className="h-12 w-12" aria-hidden />
+              </div>
+            )}
           </div>
-          <p className="mt-4 flex items-center justify-center gap-2 text-[14.5px] text-ink-2" role="status" aria-live="polite">
-            <ScanLine className="h-4 w-4 shrink-0 text-sky" aria-hidden />
-            {wrong ? "هذا الباركود ليس من باركودات النظام. جرّب باركود القسم." : "وجّه الكاميرا إلى باركود القسم المثبّت عند المدخل"}
+          <p className="mt-4 flex items-center justify-center gap-2 text-[16px] text-ink" role="status" aria-live="polite">
+            {state === "read" ? (
+              <>
+                <CircleCheck className="h-5 w-5 shrink-0 text-[var(--success)]" aria-hidden /> تمت قراءة الرمز، جارٍ فتح القسم…
+              </>
+            ) : wrong ? (
+              <>
+                <TriangleAlert className="h-5 w-5 shrink-0 text-[var(--warning)]" aria-hidden /> هذا الرمز غير تابع للنظام
+              </>
+            ) : (
+              <>
+                <ScanLine className="h-5 w-5 shrink-0 text-sky" aria-hidden /> وجّه الكاميرا إلى رمز القسم
+              </>
+            )}
           </p>
+          {wrong && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" className="btn btn-primary" onClick={() => setAttempt((n) => n + 1)}>
+                <RotateCcw className="h-4 w-4" aria-hidden /> إعادة المحاولة
+              </button>
+              <Link href="/#deps" className="btn btn-ghost" onClick={onClose}>
+                اختيار القسم
+              </Link>
+            </div>
+          )}
         </>
       )}
     </Modal>

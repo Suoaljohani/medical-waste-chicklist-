@@ -25,13 +25,12 @@ export function Ring({
   size = 112,
   stroke = 9,
   label,
-  tone = "light",
 }: {
   pct: number;
   size?: number;
   stroke?: number;
   label?: React.ReactNode;
-  tone?: "light" | "ink";
+  tone?: "light" | "ink"; // kept for older callers; the dark palette uses one tone
 }) {
   const r = 50 - stroke / 2 - 1;
   const C = 2 * Math.PI * r;
@@ -39,13 +38,13 @@ export function Ring({
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={`${Math.round(p * 100)}%`}>
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-        <circle cx="50" cy="50" r={r} fill="none" stroke={tone === "ink" ? "rgba(255,255,255,.22)" : "rgba(15,27,61,.1)"} strokeWidth={stroke} />
+        <circle cx="50" cy="50" r={r} fill="none" stroke="rgb(232 242 238 / 14%)" strokeWidth={stroke} />
         <motion.circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke={tone === "ink" ? "#7fd4f7" : "var(--sky)"}
+          stroke="var(--action)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={C}

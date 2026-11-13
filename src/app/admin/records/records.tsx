@@ -89,7 +89,7 @@ export function Records() {
           <input className="field sm ps-9" type="search" placeholder="اسم الفاحص أو رقم الحاوية" value={q} onChange={(e) => setQ(e.target.value)} />
         </label>
         <label className="flex min-h-11 cursor-pointer items-center gap-2 px-2 text-[14px] text-ink-2">
-          <input type="checkbox" className="h-5 w-5 accent-[#975a00]" checked={issuesOnly} onChange={(e) => setIssuesOnly(e.target.checked)} />
+          <input type="checkbox" className="h-5 w-5 accent-[var(--warning)]" checked={issuesOnly} onChange={(e) => setIssuesOnly(e.target.checked)} />
           بها عدم مطابقة
         </label>
       </div>
@@ -298,7 +298,7 @@ function RecordDetail({ id, onClose, onDelete, onSaved }: { id: string | null; o
                 </p>
               </div>
             </div>
-            <ul className="mt-4 divide-y divide-ink/[0.07] rounded-2xl bg-white/70 ring-1 ring-ink/[0.06]">
+            <ul className="mt-4 divide-y divide-ink/[0.07] rounded-[12px] border border-[var(--divider)] bg-field">
               {c?.fields
                 .filter((f) => !isInfoField(f))
                 .map((f) => {
@@ -340,7 +340,7 @@ function RecordDetail({ id, onClose, onDelete, onSaved }: { id: string | null; o
                         )}
                       </div>
                       {!editing && v === false && (
-                        <div className="mt-2 rounded-xl bg-[rgba(214,138,14,.08)] p-2.5 text-[13.5px]">
+                        <div className="mt-2 rounded-[12px] bg-[var(--warning-surface)] p-2.5 text-[13.5px]">
                           {s.values[obsKey(f.key, "note")] && <p>{String(s.values[obsKey(f.key, "note")])}</p>}
                           {s.values[obsKey(f.key, "action")] && <p className="text-ink-2">الإجراء: {String(s.values[obsKey(f.key, "action")])}</p>}
                           <p className="mt-1 flex flex-wrap items-center gap-2">

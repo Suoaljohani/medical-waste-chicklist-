@@ -2,162 +2,229 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ShieldUser } from "lucide-react";
+import { ChevronLeft, ClipboardList, History, RefreshCw, ShieldUser } from "lucide-react";
 import { Wordmark } from "@/components/brand";
-import { LiveClock } from "@/components/clock";
-import { DemoBadge } from "@/components/container-bits";
+import { useNow } from "@/components/clock";
+import { CodeBadge, DemoBadge } from "@/components/container-bits";
+import { latestDraft, type Draft, type DraftMeta } from "@/components/drafts";
 import { Icon } from "@/components/icon";
-import { Rise } from "@/components/motion";
-import { Ring } from "@/components/ring";
+import { useStaff } from "@/components/staff";
 import { ScanButton, StaffNav } from "@/components/staff-nav";
 import type { Department } from "@/lib/types";
+import { agoAr, zoned } from "@/lib/utils";
 
 type Count = { total: number; done: number };
 type Dep = Department & { containers: Count; lists: Count };
-type Data = { demo: boolean; departments: Dep[]; today: Count };
+type Data = { demo: boolean; departments: Dep[]; today: Count; open_notes: number };
+type Resume = Draft & { id: string; meta: DraftMeta };
 
+/** Inspector home: today's round, resume, scan, a modest summary, then the departments. */
 export function HomeView() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { staff, ready } = useStaff();
+  const [resume, setResume] = useState<Resume | null>(null);
+  const now = useNow(60_000);
+  const z = now ? zoned(now) : null;
 
+  const load = () => {
+    setLoading(true);
+    fetch("/api/public/departments", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => {
+        setData(d);
+        setError(false);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  };
   useEffect(() => {
-    const load = () =>
-      fetch("/api/public/departments", { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : Promise.reject()))
-        .then((d) => {
-          setData(d);
-          setError(false);
-        })
-        .catch(() => setError(true));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch; state is set when the request settles
     load();
     const onShow = () => document.visibilityState === "visible" && load();
     document.addEventListener("visibilitychange", onShow);
     return () => document.removeEventListener("visibilitychange", onShow);
   }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- drafts live in browser storage
+    if (ready && staff) setResume(latestDraft(staff.name));
+  }, [ready, staff]);
 
   const deps = data?.departments;
-  const today = data?.today ?? { total: 0, done: 0 };
-  const pct = today.total ? today.done / today.total : 0;
+  const t = data?.today ?? { total: 0, done: 0 };
+  const left = Math.max(0, t.total - t.done);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-32 pt-[max(14px,env(safe-area-inset-top))] sm:px-6 sm:pb-8">
-      <header className="flex items-center justify-between gap-3 py-2">
+    <main className="mx-auto w-full max-w-[1120px] px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] sm:px-6 sm:pb-10">
+      <header className="glass-toolbar flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
         <Wordmark />
-        <Link href="/admin" className="btn btn-ghost btn-sm">
+        <Link href="/admin" className="btn btn-ghost btn-sm shrink-0">
           <ShieldUser className="h-4 w-4" aria-hidden />
-          الإدارة
+          <span className="hidden sm:inline">الإدارة</span>
+          <span className="sr-only sm:hidden">الإدارة</span>
         </Link>
       </header>
 
-      <div className="mt-5 grid gap-5 md:grid-cols-[1.1fr_1fr] md:items-stretch">
-        <Rise className="glass-ink flex flex-col justify-between gap-6 p-5 sm:p-7">
-          <div>
-            <LiveClock className="!text-white/80" />
-            <h1 className="mt-2 text-[30px] sm:text-[38px]">جولة فحص الحاويات</h1>
-            <p className="muted mt-2 max-w-md text-[15.5px]">
-              ادخل القسم وامسح الباركود المثبّت عند مدخله، ثم افحص حاوياته الأرضية وحاويات الأدوات الحادة المعلّقة.
-            </p>
-          </div>
-          <ScanButton className="btn hidden h-[54px] bg-white px-6 text-[16px] text-[#0c4f86] sm:inline-flex sm:self-start" />
-        </Rise>
-
-        <Rise i={1} className="glass flex items-center gap-5 p-5 sm:p-6">
-          <Ring pct={pct} size={108} />
-          <div className="min-w-0">
-            <p className="eyebrow">حاويات اليوم في كل الأقسام</p>
-            <p className="mt-1 text-[22px] font-bold">
-              {data ? (
-                <>
-                  تم فحص <span className="num">{today.done}</span> من <span className="num">{today.total}</span>
-                </>
-              ) : (
-                <span className="skeleton inline-block h-7 w-40 align-middle" />
-              )}
-            </p>
-            <p className="mt-1 text-[14px] text-ink-2">
-              {data && today.total === 0
-                ? "لم تُسجَّل حاويات بعد. تضيفها الإدارة من لوحة التحكم."
-                : data && today.done === today.total
-                  ? "اكتمل فحص جميع الحاويات اليوم."
-                  : "المتبقي يظهر داخل كل قسم."}
-            </p>
-            {data?.demo && (
-              <p className="mt-2">
-                <DemoBadge />
-              </p>
+      <div className="mt-4 grid gap-4 lg:mt-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start lg:gap-6">
+        {/* Today's round */}
+        <section className="glass p-4 sm:p-6" aria-labelledby="round-title">
+          <p className="text-[14px] text-ink-2">
+            {z ? (
+              <>
+                {z.dayAr} <span className="code">{z.date}</span>
+              </>
+            ) : (
+              "…"
             )}
-          </div>
-        </Rise>
-      </div>
-
-      <section aria-labelledby="deps" className="mt-8">
-        <div className="mb-3 px-1">
-          <h2 id="deps" className="text-[19px]">
-            الأقسام
-          </h2>
-          <p className="text-[13px] text-ink-3">الدخول من هنا يُسجَّل اختيارًا يدويًا. المسح يؤكد وجودك في القسم.</p>
-        </div>
-
-        {error && (
-          <p className="glass p-5 text-center text-ink-2" role="alert">
-            تعذّر تحميل الأقسام. تحقق من الاتصال ثم أعد فتح الصفحة.
           </p>
-        )}
-        {!deps && !error && (
-          <div className="glass divide-y divide-ink/[0.07]">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex items-center gap-4 p-4">
-                <span className="skeleton h-12 w-12 shrink-0 rounded-[14px]" />
-                <span className="skeleton h-5 w-40" />
-              </div>
-            ))}
+          <h1 id="round-title" className="mt-1 text-[24px] sm:text-[32px]">
+            جولة اليوم
+          </h1>
+          <p className="mt-1 text-[16px] text-ink-2">امسح رمز القسم لعرض حاوياته وبدء الفحص.</p>
+
+          {resume && (
+            <Link
+              href={`/d/${resume.meta.slug}/${resume.id}`}
+              className="mt-5 flex items-center gap-3 rounded-[12px] border border-[rgb(139_200_248/40%)] bg-[var(--info-surface)] p-3 ps-4 transition-colors duration-[140ms] hover:border-[var(--info)]"
+            >
+              <History className="h-6 w-6 shrink-0 text-[var(--info)]" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold text-ink">استئناف الجولة</span>
+                <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[14px] text-ink-2">
+                  {resume.meta.department} — {resume.meta.title}
+                  {resume.meta.code && <CodeBadge code={resume.meta.code} />}
+                  <span>مسودة {agoAr(new Date(resume.at).toISOString())}</span>
+                </span>
+              </span>
+              <ChevronLeft className="h-5 w-5 shrink-0 text-ink-2" aria-hidden />
+            </Link>
+          )}
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto]">
+            <ScanButton className="btn btn-primary w-full" />
+            <a href="#deps" className="btn btn-ghost min-h-[56px]">
+              اختيار القسم
+            </a>
           </div>
-        )}
-        {deps && deps.length > 0 && (
-          <Rise i={2}>
-            <ul className="glass divide-y divide-ink/[0.07] overflow-hidden">
-              {deps.map((d) => {
-                const c = d.containers;
-                const done = c.total > 0 && c.done === c.total;
-                return (
-                  <li key={d.id}>
-                    <Link href={`/d/${d.slug}`} className="flex min-h-[76px] items-center gap-4 px-4 py-3 transition-colors duration-150 active:bg-ink/[0.05] sm:px-5">
-                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[14px] bg-sky/10 text-sky">
-                        <Icon name={d.icon} className="h-6 w-6" />
+
+          {/* Three separate facts, each with its own meaning. */}
+          <dl className="mt-5 grid grid-cols-3 divide-x divide-x-reverse divide-[var(--divider)] rounded-[12px] border border-[var(--divider)] bg-field py-3 text-center">
+            <div className="px-2">
+              <dt className="text-[14px] text-ink-2">فُحصت اليوم</dt>
+              <dd className="num mt-0.5 text-[22px] font-bold leading-tight">
+                {data ? (
+                  <>
+                    {t.done}
+                    <span className="text-[15px] font-normal text-ink-2"> من {t.total}</span>
+                  </>
+                ) : (
+                  "…"
+                )}
+              </dd>
+            </div>
+            <div className="px-2">
+              <dt className="text-[14px] text-ink-2">المتبقي</dt>
+              <dd className="num mt-0.5 text-[22px] font-bold leading-tight">{data ? left : "…"}</dd>
+            </div>
+            <div className="px-2">
+              <dt className="text-[14px] text-ink-2">ملاحظات مفتوحة</dt>
+              <dd className={`num mt-0.5 text-[22px] font-bold leading-tight ${data?.open_notes ? "text-[var(--warning)]" : ""}`}>{data ? data.open_notes : "…"}</dd>
+            </div>
+          </dl>
+          {data && t.total === 0 && <p className="mt-3 text-[14px] text-ink-2">لا توجد حاويات مسجّلة بعد، لذا لا تُحسب نسبة للجولة. تضيفها الإدارة من صفحة الحاويات.</p>}
+          {data && t.total > 0 && left === 0 && <p className="mt-3 text-[14px] text-[var(--success)]">اكتمل فحص جميع الحاويات اليوم.</p>}
+          {data?.demo && (
+            <p className="mt-3">
+              <DemoBadge />
+            </p>
+          )}
+        </section>
+
+        {/* Departments */}
+        <section id="deps" aria-labelledby="deps-title" className="glass scroll-mt-4 overflow-hidden">
+          <div className="flex items-end justify-between gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-5">
+            <div>
+              <h2 id="deps-title" className="text-[20px] sm:text-[22px]">
+                الأقسام
+              </h2>
+              <p className="text-[14px] text-ink-2">الدخول من القائمة يُسجَّل اختيارًا يدويًا.</p>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mx-4 mb-4 flex flex-wrap items-center gap-3 rounded-[12px] border border-[rgb(255_180_171/40%)] bg-[var(--danger-surface)] p-3 sm:mx-6" role="alert">
+              <p className="flex-1 text-[15px] text-[var(--danger)]">تعذّر تحميل الأقسام. {data ? "المعروض آخر بيانات وصلت." : "تحقق من الاتصال."}</p>
+              <button className="btn btn-ghost btn-sm" onClick={load} disabled={loading}>
+                <RefreshCw className="h-4 w-4" aria-hidden /> إعادة المحاولة
+              </button>
+            </div>
+          )}
+
+          <ul className="divide-y divide-[var(--divider)] border-t border-[var(--divider)]" aria-busy={!data && !error}>
+            {!data &&
+              !error &&
+              [0, 1, 2].map((i) => (
+                <li key={i} className="flex min-h-[80px] items-center gap-4 px-4 sm:px-6">
+                  <span className="skeleton h-12 w-12 shrink-0" />
+                  <span className="flex-1">
+                    <span className="skeleton block h-5 w-40" />
+                    <span className="skeleton mt-2 block h-2 w-full" />
+                  </span>
+                </li>
+              ))}
+            {deps?.map((d) => {
+              const c = d.containers;
+              const pct = c.total ? c.done / c.total : 0;
+              return (
+                <li key={d.id}>
+                  <Link href={`/d/${d.slug}`} className="row-hit flex min-h-[80px] items-center gap-4 px-4 py-3 sm:px-6">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[12px] border border-[var(--divider)] bg-raised text-sky">
+                      <Icon name={d.icon} className="h-6 w-6" strokeWidth={1.75} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-baseline justify-between gap-3">
+                        <span className="text-[17px] font-bold leading-snug">{d.name_ar || d.name_en}</span>
+                        {c.total > 0 && (
+                          <span className={`num shrink-0 text-[14px] font-bold ${c.done === c.total ? "text-[var(--success)]" : "text-ink-2"}`}>
+                            {c.done === c.total ? "اكتمل" : <bdi dir="ltr">{Math.round(pct * 100)}%</bdi>}
+                          </span>
+                        )}
                       </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[16.5px] font-bold">{d.name_ar || d.name_en}</span>
-                        <span className="mt-0.5 block text-[13.5px] text-ink-2">
-                          {c.total === 0 ? (
-                            "لا توجد حاويات مسجّلة"
-                          ) : (
-                            <>
-                              <span className="num">{c.done}</span> من <span className="num">{c.total}</span> حاوية فُحصت اليوم
-                            </>
-                          )}
-                          {d.lists.total > 0 && (
-                            <>
-                              {" "}
-                              — <span className="num">{d.lists.total}</span> قوائم أخرى
-                            </>
-                          )}
-                        </span>
+                      <span className="mt-0.5 block text-[14px] text-ink-2">
+                        {c.total === 0 ? (
+                          "لا توجد حاويات مسجّلة"
+                        ) : (
+                          <>
+                            فُحصت <span className="num">{c.done}</span> من <span className="num">{c.total}</span> حاوية
+                          </>
+                        )}
+                        {d.lists.total > 0 && (
+                          <>
+                            {" "}
+                            — <span className="num">{d.lists.total}</span> سجلات تشغيلية
+                          </>
+                        )}
                       </span>
                       {c.total > 0 && (
-                        <span className={done ? "chip chip-ok" : "chip"}>
-                          {done ? "اكتملت" : <span className="num">{Math.round((c.done / c.total) * 100)}%</span>}
+                        <span className="meter mt-2 block" role="img" aria-label={`فُحصت ${c.done} من ${c.total}`}>
+                          <i style={{ transform: `scaleX(${pct})` }} />
                         </span>
                       )}
-                      <ChevronLeft className="h-5 w-5 shrink-0 text-ink-3" aria-hidden />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </Rise>
-        )}
-        {deps?.length === 0 && <p className="glass p-6 text-center text-ink-2">لا توجد أقسام بعد. تضيفها الإدارة من لوحة التحكم.</p>}
-      </section>
+                    </span>
+                    <ChevronLeft className="h-5 w-5 shrink-0 text-ink-2" aria-hidden />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          {deps?.length === 0 && (
+            <p className="flex items-center gap-2 border-t border-[var(--divider)] px-6 py-8 text-ink-2">
+              <ClipboardList className="h-5 w-5" aria-hidden /> لا توجد أقسام بعد. تضيفها الإدارة من لوحة التحكم.
+            </p>
+          )}
+        </section>
+      </div>
 
       <StaffNav />
     </main>

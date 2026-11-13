@@ -208,7 +208,7 @@ export function StaffPage() {
               />
             </div>
             <label className="flex min-h-11 items-center gap-2.5 text-[14.5px] text-ink-2 sm:col-span-2">
-              <input type="checkbox" className="h-5 w-5 accent-[#0c6fae]" checked={draft.active ?? true} onChange={(e) => setDraft({ ...draft, active: e.target.checked })} />
+              <input type="checkbox" className="h-5 w-5 accent-[var(--action)]" checked={draft.active ?? true} onChange={(e) => setDraft({ ...draft, active: e.target.checked })} />
               الحساب مفعّل ويمكنه الدخول
             </label>
           </div>

@@ -58,28 +58,28 @@ export function Modal({
           aria-modal="true"
           aria-label={title}
         >
-          <div className="absolute inset-0 bg-[rgba(15,27,61,.42)]" onClick={() => !busy && onClose()} aria-hidden />
+          <div className="absolute inset-0 bg-[rgb(3_14_19/72%)]" onClick={() => !busy && onClose()} aria-hidden />
           <motion.div
             ref={panel}
             data-panel
             tabIndex={-1}
-            className={`glass-strong relative flex max-h-[92dvh] w-full flex-col rounded-b-none outline-none sm:rounded-b-[var(--r)] ${wide ? "sm:max-w-3xl" : "sm:max-w-lg"}`}
-            style={{ borderStartStartRadius: 28, borderStartEndRadius: 28 }}
+            className={`glass-strong relative flex max-h-[92dvh] w-full flex-col rounded-b-none outline-none sm:rounded-b-[var(--radius-dialog)] ${wide ? "sm:max-w-3xl" : "sm:max-w-[520px]"}`}
+            style={{ borderStartStartRadius: 18, borderStartEndRadius: 18 }}
             initial={reduce ? { opacity: 0 } : { y: "24%", opacity: 0 }}
             animate={reduce ? { opacity: 1 } : { y: 0, opacity: 1 }}
-            exit={reduce ? { opacity: 0 } : { y: "12%", opacity: 0, transition: { duration: 0.16, ease: "easeIn" } }}
-            transition={{ duration: 0.36, ease: EASE_SHEET }}
+            exit={reduce ? { opacity: 0 } : { y: "8%", opacity: 0, transition: { duration: 0.16, ease: "easeIn" } }}
+            transition={{ duration: 0.22, ease: EASE_SHEET }}
           >
             <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink/15 sm:hidden" aria-hidden />
             <div className="flex items-center justify-between gap-4 px-5 pb-3 pt-3 sm:pt-5">
-              <h2 className="text-[18px] font-bold">{title}</h2>
+              <h2 className="text-[20px] font-bold">{title}</h2>
               <button className="btn btn-ghost btn-sm btn-icon" onClick={onClose} disabled={busy} aria-label="إغلاق">
                 <X className="h-4 w-4" aria-hidden />
               </button>
             </div>
             <div className="scroll-thin overflow-y-auto px-5 pb-5">{children}</div>
             {footer && (
-              <div className="flex flex-wrap justify-end gap-2 border-t border-ink/10 px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">{footer}</div>
+              <div className="flex flex-wrap justify-end gap-2 border-t border-[var(--divider)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">{footer}</div>
             )}
           </motion.div>
         </motion.div>

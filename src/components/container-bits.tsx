@@ -4,31 +4,29 @@ import type { ContainerKind } from "@/lib/types";
 import { cx } from "@/lib/utils";
 import { FloorBin, SharpsBox } from "./icon";
 
-/** Coloured tile with the container's glyph. Shape tells the two kinds apart; colour only supports it. */
+/**
+ * Container type mark: the glyph shape tells floor and sharps apart; a thin biohazard-yellow lip echoes the
+ * real containers in the photograph. Colour never carries the meaning alone; the type is always written beside it.
+ */
 export function KindTile({ kind, size = 48 }: { kind: ContainerKind; size?: number }) {
   const G = kind === "floor" ? FloorBin : SharpsBox;
   return (
     <span
-      className="grid shrink-0 place-items-center text-white"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.3,
-        background: kind === "floor" ? "linear-gradient(150deg,#0a8f9c,#057590)" : "linear-gradient(150deg,#3a4fa6,#283a83)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,.3)",
-      }}
-      title={KIND[kind].ar}
+      className="relative grid shrink-0 place-items-center overflow-hidden border border-[var(--control-border)] bg-field text-ink"
+      style={{ width: size, height: size, borderRadius: Math.round(size * 0.26) }}
+      aria-hidden
     >
-      <G className="h-[56%] w-[56%]" strokeWidth={1.7} />
+      <span className="absolute inset-x-0 top-0 h-[3px] bg-[#e3c14f]" />
+      <G className="h-[60%] w-[60%]" strokeWidth={1.75} />
     </span>
   );
 }
 
 export function CodeBadge({ code, className }: { code: string; className?: string }) {
   return (
-    <span translate="no" className={cx("code rounded-lg bg-ink/[0.07] px-2 py-0.5 text-[12.5px] text-ink-2", className)}>
+    <bdi translate="no" className={cx("code rounded-[8px] border border-[var(--divider)] bg-field px-2 py-0.5 text-[14px] text-ink", className)}>
       {code}
-    </span>
+    </bdi>
   );
 }
 
@@ -42,36 +40,40 @@ export function RoundChip({ state, draft }: { state: RoundState; draft?: boolean
   if (!state)
     return draft ? (
       <span className="chip chip-info">
-        <PencilLine className="h-3.5 w-3.5" aria-hidden /> مسودة لم تُحفظ
+        <PencilLine className="h-3.5 w-3.5" aria-hidden /> مسودة
       </span>
     ) : (
       <span className="chip">
-        <Circle className="h-3 w-3" aria-hidden /> لم تُفحص بعد
+        <Circle className="h-3 w-3" aria-hidden /> لم يبدأ
       </span>
     );
   if (state.nonCompliant === 0)
     return (
       <span className="chip chip-ok">
-        <Check className="h-3.5 w-3.5" strokeWidth={2.6} aria-hidden /> فُحصت · مطابقة
+        <Check className="h-3.5 w-3.5" strokeWidth={2.6} aria-hidden /> مطابق
       </span>
     );
   if (state.open > 0)
     return (
       <span className="chip chip-warn">
-        <TriangleAlert className="h-3.5 w-3.5" aria-hidden /> فُحصت · ملاحظة مفتوحة
+        <TriangleAlert className="h-3.5 w-3.5" aria-hidden /> ملاحظة مفتوحة
       </span>
     );
   return (
     <span className="chip chip-info">
-      <CheckCheck className="h-3.5 w-3.5" aria-hidden /> فُحصت · الملاحظة عولجت
+      <CheckCheck className="h-3.5 w-3.5" aria-hidden /> عولجت الملاحظة
     </span>
   );
+}
+
+export function KindLabel({ kind }: { kind: ContainerKind }) {
+  return <>{KIND[kind].short === "أدوات حادة" ? "أدوات حادة" : "أرضية"}</>;
 }
 
 export function DemoBadge() {
   return (
     <span className="chip chip-warn" title="هذه بيانات توضيحية للمعاينة وليست بيانات المستشفى">
-      بيانات توضيحية للمعاينة
+      بيانات توضيحية
     </span>
   );
 }

@@ -183,7 +183,7 @@ export function DepartmentsPage() {
                     aria-label={name}
                     aria-pressed={draft.icon === name}
                     onClick={() => setDraft({ ...draft, icon: name })}
-                    className={cx("grid aspect-square place-items-center rounded-xl", draft.icon === name ? "bg-sky text-white" : "bg-ink/[0.05] text-ink-2 hover:bg-ink/10")}
+                    className={cx("grid aspect-square place-items-center rounded-xl", draft.icon === name ? "bg-[var(--action)] text-[var(--action-text)]" : "bg-ink/[0.05] text-ink-2 hover:bg-ink/10")}
                   >
                     <Icon name={name} className="h-[18px] w-[18px]" />
                   </button>

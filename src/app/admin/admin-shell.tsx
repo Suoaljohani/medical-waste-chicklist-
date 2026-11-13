@@ -91,7 +91,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   if (state === "out") return <Login onDone={check} />;
 
   const fileNote = backend === "file" && (
-    <p className="flex gap-2 rounded-xl bg-[rgba(214,138,14,.13)] p-3 text-[12.5px] leading-snug text-warn">
+    <p className="flex gap-2 rounded-[12px] border border-[rgb(241_188_119/35%)] bg-[var(--warning-surface)] p-3 text-[13px] leading-snug text-[var(--warning)]">
       <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden />
       تخزين محلي للمعاينة. اربط Supabase لحفظ البيانات بشكل دائم.
     </p>
@@ -99,8 +99,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastCtx.Provider value={toast}>
-      <div className="mx-auto flex w-full max-w-[1480px] flex-1 gap-5 px-3 pt-3 sm:px-5 sm:pt-5">
-        <aside className="glass-thin sticky top-5 hidden h-[calc(100dvh-40px)] w-64 shrink-0 flex-col p-4 lg:flex" aria-label="أقسام لوحة الإدارة">
+      <div className="mx-auto flex w-full max-w-[var(--layout-max)] flex-1 gap-6 px-4 pt-4 md:px-6 md:pt-6 xl:px-8">
+        <aside className="glass-nav sticky top-5 hidden h-[calc(100dvh-40px)] w-[var(--sidebar-mid)] shrink-0 flex-col p-3 lg:flex xl:w-[var(--sidebar-wide)]" aria-label="أقسام لوحة الإدارة">
           <div className="px-1 pb-5">
             <Wordmark compact href="/admin" />
           </div>
@@ -117,14 +117,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                           href={n.href}
                           aria-current={active ? "page" : undefined}
                           className={cx(
-                            "relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-[14.5px] font-bold transition-colors duration-150",
-                            active ? "text-sky" : "text-ink-2 hover:bg-ink/[0.05] hover:text-ink",
+                            "relative flex min-h-11 items-center gap-3 rounded-[12px] px-3 text-[15px] font-bold transition-colors duration-[140ms]",
+                            active ? "text-ink" : "text-ink-2 hover:bg-ink/[0.05] hover:text-ink",
                           )}
                         >
                           {active && (
                             <motion.span
                               layoutId={reduce ? undefined : "nav-pill"}
-                              className="absolute inset-0 rounded-xl bg-white shadow-[0_1px_3px_rgba(15,27,61,.12)]"
+                              className="absolute inset-0 rounded-[12px] bg-raised shadow-[inset_0_0_0_1px_rgb(118_220_205/45%)]"
                               transition={{ duration: 0.22, ease: EASE }}
                             />
                           )}
@@ -167,7 +167,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     aria-current={active ? "page" : undefined}
                     className={cx(
                       "flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-[14px] font-bold",
-                      active ? "bg-white text-sky shadow-[0_1px_3px_rgba(15,27,61,.14)]" : "bg-ink/[0.05] text-ink-2",
+                      active ? "bg-raised text-ink shadow-[inset_0_0_0_1px_rgb(118_220_205/55%)]" : "border border-[var(--divider)] bg-surface text-ink-2",
                     )}
                   >
                     <n.icon className="h-4 w-4" strokeWidth={1.9} />

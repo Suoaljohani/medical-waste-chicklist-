@@ -45,8 +45,8 @@ export function PageTitle({ title, sub, children }: { title: string; sub?: strin
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-[26px] sm:text-[30px]">{title}</h1>
-        {sub && <p className="mt-0.5 text-[14.5px] text-ink-2">{sub}</p>}
+        <h1 className="text-[24px] md:text-[32px]">{title}</h1>
+        {sub && <p className="mt-0.5 text-[16px] text-ink-2">{sub}</p>}
       </div>
       {children && <div className="flex flex-wrap gap-2">{children}</div>}
     </div>

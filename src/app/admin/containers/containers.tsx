@@ -263,7 +263,7 @@ export function Containers() {
                     role="radio"
                     aria-checked={form.kind === k}
                     onClick={() => setForm({ ...form, kind: k })}
-                    className={cx("flex items-center gap-3 rounded-2xl border p-3 text-start transition-colors", form.kind === k ? "border-sky bg-sky/[0.07]" : "border-ink/12 bg-white/70")}
+                    className={cx("flex items-center gap-3 rounded-2xl border p-3 text-start transition-colors", form.kind === k ? "border-[var(--action)] bg-raised" : "border-[var(--control-border)] bg-field")}
                   >
                     <KindTile kind={k} size={40} />
                     <span className="font-bold">{KIND[k].ar}</span>
@@ -309,7 +309,7 @@ export function Containers() {
               </div>
             </div>
             <label className="flex min-h-11 items-center gap-2.5">
-              <input type="checkbox" className="h-5 w-5 accent-[#0c6fae]" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+              <input type="checkbox" className="h-5 w-5 accent-[var(--action)]" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
               مفعّلة وتظهر في جولة القسم
             </label>
           </div>
